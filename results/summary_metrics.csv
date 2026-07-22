@@ -1,0 +1,3 @@
+Algorithm,Problem,Runs,Feasible_Ratio,Mean_Feasible_ND,IGD_Mean,IGD_Std,HV_Mean,HV_Std,Time_Mean_Sec
+APSEA,C1DTLZ1,3,0.00%,0.00 ± 0.00,,,0.0,0.0,4.710873125014284
+DSOCOL,C1DTLZ1,3,0.00%,0.00 ± 0.00,,,0.0,0.0,4.871852319668203

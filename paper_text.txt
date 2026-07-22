@@ -1,0 +1,2028 @@
+--- Page 1 ---
+1
+Collaborative Orthogonal Learning for Constrained
+Multi-Objective Optimization
+Yubo Wang, Chengyu Hu, Xinyi Wu, Tingyu Zhang, Wenyin Gong, Senior Member, IEEE, Xuesong Yan,
+Liang Gao, Senior Member, IEEE,
+Abstract—Balancing feasibility, convergence, and diversity is a
+fundamental challenge in constrained multi-objective optimiza-
+tion, particularly in landscapes with irregular or disconnected
+boundaries. Existing methods primarily exchange solution po-
+sitions but neglect valuable convergence direction information
+contained within the evolutionary process, which may lead to
+inefficient and redundant searches for the constrained Pareto
+front (CPF). To address this, we propose a dual-swarm com-
+petitive optimizer with collaborative orthogonal learning (COL)
+strategy, which effectively decouples global exploration and di-
+versity exploitation. Specifically, the main swarm performs trend
+learning to identify convergence directions from boundary and
+winner-loser interaction information, enabling global exploration
+through infeasible regions toward the CPF. Guided by the learned
+trends, the auxiliary swarm executes orthogonal learning to
+search complementary subspaces, which broadens the solution
+distribution while avoiding redundant searches, ensuring diver-
+sity exploitation capability. Additionally, a niche-guided subset
+selection strategy is introduced to maintain uniform distribution
+within the objective space through a three-level subset division
+mechanism based on local niche capacity. Extensive experiments
+on standard and extended benchmark instances demonstrate the
+robustness and superiority of our approach over nine state-of-
+the-art methods.
+Index Terms—Constrained multi-objective optimization prob-
+lems, global exploration, diversity exploitation, collaborative
+orthogonal learning, niche-guided subset selection.
+I. I NTRODUCTION
+C
+ONSTRAINED multi-objective optimization problems
+(CMOPs) frequently arise in many real-world appli-
+cations, such as job shop scheduling problems [1], circuit
+design problem [2] and optimal power flow problems [3].
+Unlike unconstrained optimization, the primary challenge in
+solving CMOPs lies in balancing feasibility, convergence, and
+diversity. This challenge is particularly difficult when handling
+CMOPs with complex landscapes characterized by narrow,
+disconnected, or irregular boundaries. Such complex land-
+scapes often impede traditional constrained multi-objective
+optimization evolutionary algorithms (CMOEAs), causing the
+This work was partly supported by the National Natural Science Foundation
+of China under Grant Nos. 62073300 and 62576325, in part by the Engi-
+neering Research Center of Natural Resource Information Management and
+Digital Twin Engineering Software, Ministry of Education, Wuhan 430074,
+China. (Corresponding author: Chengyu Hu.)
+Yubo Wang, Chengyu Hu, Xinyi Wu, Tingyu Zhang, Wenyin Gong, and
+Xuesong Yan are with the School of Computer Science, China University of
+Geosciences, Wuhan 430074, China. (Email: huchengyu@cug.edu.cn)
+Liang Gao is with the State Key Laboratory of Digital Manufacturing
+Equipment and Technology, Huazhong University of Science and Technology,
+Wuhan 430074, China.
+population to be easily trapped in local feasible regions or fail
+to cover the entire constrained Pareto front (CPF).
+To tackle these challenges, numerous constraint-handling
+techniques (CHTs) have been developed and incorporated
+into evolutionary algorithms (EAs) [4]–[7]. Among them, the
+constraint dominance principle (CDP) stands out as a classic
+approach due to its simplicity and parameter-free nature [8].
+However, when the problem contains large infeasible barriers
+or disjoint feasible islands, CDP often leads to premature
+convergence. To alleviate this, ε methods have gained popu-
+larity [9], [10]. By dynamically relaxing constraint boundaries
+through a threshold ε, these methods allow the population to
+preserve high-quality infeasible solutions, thereby enabling the
+traversal of infeasible regions to converge to the CPF. More
+recently, multi-population and multi-tasking frameworks have
+been proposed and widely utilized to decouple constraint sat-
+isfaction and objective optimization [11]–[13]. The key feature
+of these methods lies in equipping different populations with
+distinct CHTs and assigning them different tasks, thereby en-
+hancing algorithmic performance through knowledge transfer
+between populations. Nevertheless, as reflected in the exper-
+imental results in Section IV-B, existing approaches, despite
+the integration of various advanced CHTs, often struggle to
+maintain a satisfactory and comprehensive performance when
+solving CMOPs with diverse landscapes. To systematically
+address challenges arising from different types of problems,
+we present the following analysis of the current studies.
+• In many existing multi-population and multi-tasking
+frameworks, knowledge transfer between populations is
+primarily achieved by sharing the spatial coordinates of
+high-quality solutions. While this approach effectively
+transmits the locations of promising regions, it fails to
+uncover and convey the potential beneficial convergence
+directions within the evolutionary process that could help
+populations converge and search more efficiently. When
+handling problems with complex landscapes, the main
+population may converge slowly, while the auxiliary pop-
+ulations may perform redundant searches in the regions
+explored by the main population. Hence, a direction-
+guided collaborative framework is needed to decouple
+global exploration and diversity exploitation.
+• Even existing CMOEAs equipped with various advanced
+CHTs still primarily rely on traditional reproduction
+operators, such as differential evolution (DE) and genetic
+algorithms (GA), to generate offspring. Their search
+process is mainly driven by random neighborhood per-
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 2 ---
+2
+turbations around the current solutions, which may limit
+algorithmic performance in CMOPs featuring expansive
+search space landscapes. Therefore, there is significant
+potential in extracting reusable search experience from
+population evolution to form promising search directions
+and guide more efficient evolution.
+• Several CMOEAs tend to favor solutions with better
+feasibility or convergence in their environment selection
+[14], [15]. Although such preference facilitates rapid
+convergence, it may also cause the population to converge
+unidirectionally toward CPF in a clustered state, hinder-
+ing the population’s ability to perform extensive searches.
+When the feasible region is narrow and separated, such as
+LIR-CMOP3, this strategy makes the population prone to
+being trapped in local feasible regions, resulting in only a
+small fraction of CPFs being searched. Thus, it is neces-
+sary to maintain good distribution in the objective space
+and promote uniform search across multiple directions.
+Based on the above considerations, in this article, we
+propose a dual-swarm optimizer with collaborative orthogonal
+learning, named DSOCOL. Specifically, the main contribu-
+tions of our research include the following.
+1) A dual-swarm cooperative framework driven by evolu-
+tionary direction learning is proposed to decouple the
+conflicting tasks of convergence and diversity. Specifically,
+the framework synergizes solution knowledge transfer with
+evolutionary direction learning. The primary swarm pri-
+marily focuses on rapidly converging to feasible regions
+to localize the CPF, while the auxiliary swarm emphasizes
+extensive exploitation of the objective space to enhance
+uniform search for the CPF. By sharing both high-quality
+offspring solutions and promising evolutionary directions,
+the two swarms effectively collaborate to overcome chal-
+lenges in CMOPs with complex landscapes.
+2) A novel collaborative orthogonal learning (COL) strategy
+is developed to synergize the search behaviors of the two
+swarms. Instead of merely sharing the solutions, the main
+swarm performs trend learning to extract promising con-
+vergence directions by the solution status within different
+niches and transmits them to the auxiliary swarm, ensuring
+global exploration. The auxiliary swarm then executes
+orthogonal learning based on these trends to explore com-
+plementary subspaces, aiming to reduce redundant searches
+and enhance diversity exploitation along the CPF.
+3) A niche-guided subset selection strategy is designed for
+environmental selection to handle irregular Pareto fronts.
+By implementing a three-level subset division mechanism
+based on local niche capacity, this strategy dynamically
+regulates swarm density. The strategy ensures the ex-
+ploration of sparse niches and effectively manages the
+trade-off between local convergence and global diversity,
+enhancing the capability to capture discrete CPF fragments.
+In addition, comprehensive experiments are conducted to
+validate the proposed algorithm, which covers four standard
+benchmark suites, one specific suite characterized by deceptive
+constraints, and ten real-world application scenarios spanning
+four distinct domains, covering both standard and large-scale
+decision variables. By comparing DSOCOL with nine state-of-
+the-art CMOEAs, the experimental results confirm its superior
+performance and robustness across a wide range of CMOPs
+with diverse and complex landscapes.
+The remainder of this article is organized as follows: Sec-
+tion II reviews the related work. Sections III and IV provide the
+details of DSOCOL and the experimental results and analysis.
+Section V summarizes conclusions and future work.
+II. R ELATED WORK
+A. Preliminaries
+A CMOP can be mathematically denoted as follows:
+Minimize F(x) = (f1(x), f2(x), · · ·, fM (x))T ,
+s.t. x ∈ SD,
+gi(x) = 0, i= 1, · · ·, p
+hj(x) ≤ 0, j= 1, · · ·, q
+(1)
+where F(x) are objective functions; M is the number of
+objectives; x = ( x1, x2, · · ·, xD) represents one solution in
+the decision space SD; D is the decision variable dimension;
+gi(x) and hj(x) denote the degree of constraint violation (CV)
+of the solution on the ith and jth constraint functions. The
+overall CV of x is
+CV (x) =
+pX
+i=1
+|gi(x)| +
+qX
+j=1
+max(0, hj(x)) (2)
+CV (x) = 0 means x is a feasible solution, otherwise x is
+infeasible solution.
+For any two solutions, x is said to Pareto dominate y
+(notated as x ≺ y) if x is no worse than y regarding all
+objective components and outperforms y in at least one. z is
+an unconstrained Pareto optimal solution if z is not dominated
+by any other candidate x within the entire search space. The
+aggregate of these solutions is termed the unconstrained Pareto
+optimal set (UPS). Similarly, a feasible solution z (where
+CV (z) = 0 ) is defined as a constrained Pareto optimal
+solution if no other feasible solution x can dominate it. These
+points together constitute the constrained Pareto optimal set
+(CPS). The projections of the UPS and CPS onto the objective
+space are designated as the unconstrained Pareto front (UPF)
+and the CPF, respectively.
+B. Existing CMOEAs
+Over the past few decades, many CMOEAs have been
+proposed to solve the challenge of balancing convergence,
+feasibility, and diversity. Based on their underlying CHTs,
+these existing approaches can be broadly categorized into the
+following groups.
+1) Methods based on the separation of objectives and con-
+straints. When addressing CMOPs, these approaches treat the
+evaluation of objective functions and constraint satisfaction as
+distinct processes. The CDP stands out as a classic example of
+this category, applying the rules of standard Pareto dominance
+to constrained environments [8]. Despite the simplicity of
+CDP, methods driven purely by feasibility often suffer from
+premature convergence. To better leverage information from
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 3 ---
+3
+infeasible individuals, Fan et al. [10] integrated an improved
+ε method into the MOEA/D. This method dynamically tunes
+the relaxation parameter ε according to the current ratio of
+feasible solutions. Similarly, to prevent the population from
+becoming stagnant, Zhu et al. [9] introduced a mechanism that
+utilizes an enhanced ε-constrained strategy to identify the CPF.
+Specifically, with a constrained relaxation value ε, a solution
+x is considered to ε-constraint dominate solution y ( x ≺ε y)
+when any of the criteria listed below are met.
+• CV (x) ≤ ε & CV (y) ≤ ε & x ≺ y.
+• CV (x) ≤ ε < CV(y) .
+• ε < CV(x) < CV(y).
+Furthermore, Stochastic Ranking (SR) offers another per-
+spective by introducing a probability parameter, pf. This
+parameter determines whether the comparison between two
+individuals should focus on their objective values or their
+degree of constraint violation. To improve this, Ying et al.
+[16] developed an adaptive SR mechanism that automatically
+adjusts pf based on the evolutionary status and the variation
+in violation levels among individuals. Additionally, Jan and
+Khanum et al. [17] incorporated a modified version of SR
+into MOEA/D for solving CMOPs. Gu et al. [18] developed
+a surrogate-assisted evolutionary algorithm, where they intro-
+duced an enhanced SR strategy by integrating a fitness-based
+mechanism with an adaptive probability operator. Liu et al.
+[19] investigated indicator-based CMOEAs by incorporating
+the indicator-based MOEA with SR, the ε-constraint method,
+and CDP, respectively. Nevertheless, a major drawback of both
+SR and ε-based methods is their reliance on extra parameters,
+which can be difficult to tune and may negatively affect the
+algorithm’s overall performance.
+2) Methods based on penalty function. The fundamental
+principle of this category involves incorporating constraint
+violations directly into the objective functions in the form
+of penalty terms. While this strategy is attractive due to its
+straightforward implementation, the algorithm’s effectiveness
+relies heavily on the precise tuning of penalty coefficients. To
+optimize the search process, Ma et al. [20] developed a shift-
+based penalty scheme. This approach directs the population
+toward feasible regions during the initial phases of evolution,
+while focusing on converging to the CPF in the latter stages.
+Jiao et al. [21] introduced a feasibility-guided strategy that
+revises the objective functions according to the level of con-
+straint violation, thereby producing updated fitness values. In
+terms of parameter automation, Yu et al. [22] introduced a
+mechanism assisted by dynamic selection preference to adjust
+the priority between objective minimization and constraint
+satisfaction. More precisely, the emphasis placed on objectives
+is progressively decreased from 1 down to 0, following a spe-
+cific cosine curve trajectory. In addition, to better coordinate
+objective optimization and constraint satisfaction, the penalty
+coefficient is dynamically tuned based on the proportion of
+feasible solutions in the current population. Vaz et al. [23]
+proposed a three-stage penalty scheme, where distinct penalty
+coefficients are applied during different phases of the evolu-
+tionary process.
+3) Methods of transforming CMOPs into other problem. Popu-
+lar strategies for addressing CMOPs often involve restructuring
+the problem into either a multi-phase process or a collaborative
+framework involving multiple populations. In the context of
+multi-stage CMOEAs, the evolutionary process is segmented
+into distinct periods, each employing a unique CHT. For
+instance, Fan et al. [15] introduced a push-pull framework.
+This method operates by initially driving the population toward
+the UPF during the push phase, and subsequently retrieving in-
+dividuals back towards the feasible regions and the CPF in the
+pull phase. Similarly, CMOEA-MS developed by Tian et al.
+[24] functions in two stages: one dedicated to locating the
+feasible region, and the other designed to distribute the solu-
+tions along the feasible boundary. Xiang et al. [25] presented
+a two-stage algorithm called CIC-MOEA/D. In the first stage,
+the algorithm focuses solely on the objective functions to
+identify the UPF. In the second stage, constraint information
+is progressively strengthened so that the search can better
+converge toward the CPF.
+On the other hand, multi-population CMOEAs evolve sev-
+eral independent groups of individuals simultaneously, as-
+signing different CHTs to each group. A notable example
+is the work of Sun et al. [12], who devised a novel con-
+straint relaxation technique aimed at retaining high-potential
+solutions within the population. Concurrently, they utilized
+an external archive based on CDP to store the set of feasi-
+ble non-dominated solutions. Additionally, Wang et al. [14]
+presented a cooperative framework based on DE that utilizes
+m distinct subpopulations. In this structure, each subpopu-
+lation is tasked with optimizing a specific objective subject
+to constraints. Alongside this, an archive population is em-
+ployed to preserve the identified constrained non-dominated
+solutions, thereby facilitating convergence to the CPF. A dual-
+population framework was introduced by Liu et al. [26] to
+reformulate CMOPs. Within this architecture, one specific
+group is dedicated entirely to handling constraints, whereas
+the second group concentrates solely on improving the ob-
+jective optimization. Throughout the evolutionary process,
+information exchange and knowledge sharing occur between
+these two distinct populations. Conversely, Yang et al. [27]
+tackled CMOPs by dividing the main problem into several
+smaller sub-tasks through the segmentation of the objective
+space. To effectively address these generated sub-problems, a
+combination of different CHTs was simultaneously employed.
+4) Methods of altering the reproduction operators. The core
+of this category of algorithms lies in the construction of
+specialized and efficient reproductive operators. To enhance
+the capability of competitive swarm optimizer (CSO) in
+solving CMOPs, Ming et al. [28] developed a competitive
+and cooperative swarm optimizer. This technique refines the
+competitive process via an extension parameter to expedite
+convergence towards the Pareto front. Concurrently, it employs
+a cooperative mutual-learning scheme to assist the swarm in
+bypassing local feasible traps. In terms of mutation strategies,
+Yu et al. [29] introduced a novel mechanism capable of
+processing both feasible and infeasible individuals, thereby
+ensuring a uniform distribution along the CPF. More recently,
+Ming et al. [30] integrated deep reinforcement learning into
+an operator selection framework. By treating the population’s
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 4 ---
+4
+status as environmental states, this approach adaptively iden-
+tifies the most suitable evolutionary operator for the current
+stage. Miyakawa et al. [31] developed a strategy for direct
+matching, through which each individual is provided with a
+specific search direction determined by its distribution in the
+objective space. In contrast, He et al. [32] focused on the
+reproduction stage and pointed out that generating offspring
+with either feasibility potential or useful infeasibility is critical
+to the search process.
+5) Methods of evolutionary multi-tasking optimization. As
+a specialized branch of evolutionary transfer optimization
+(ETO) [33], evolutionary multi-tasking optimization (EMT)
+focuses on enhancing performance through the collaborative
+exchange of beneficial information between distinct tasks.
+This mechanism shares conceptual similarities with the multi-
+population strategy in CMOEAs. Drawing inspiration from
+this information interaction, Qiao et al. [13] developed a
+method that treats populations (specifically parent or off-
+spring sets) as transferable knowledge. They introduced an
+unconstrained auxiliary task designed to locate the UPF. The
+transfer strategy is condition-dependent: parent populations are
+transferred when the CPF is a subset of the UPF, whereas
+offspring populations are exchanged when there is a partial
+overlap between the CPF and UPF. In a different approach,
+Ming et al. [11] constructed a tri-task framework that inte-
+grates the strengths of both constraint-ignoring and constraint-
+relaxing tasks. Qiao et al. [34] proposed MTCMO, which
+handles CMOPs by introducing a dynamic auxiliary task
+whose constraint boundary is progressively tightened to better
+match the main task. With this design, the population can
+bypass infeasible barriers at the early stage and then move
+toward the CPF from infeasible regions as the search proceeds.
+Nevertheless, the simultaneous optimization of multiple tasks
+inevitably increases algorithmic complexity, which may hinder
+convergence when computational resources are restricted.
+Remarks: To retain the synergistic benefits of multi-
+population interaction while bypassing the burden of task
+reformulation, the proposed DSOCOL adopts an approach
+distinct from EMT. Specifically, from a structural perspec-
+tive, both DSOCOL and the EMT framework belong to the
+multi-population paradigm, leveraging information interaction
+between different populations. However, they diverge funda-
+mentally in two aspects. First, in terms of problem formulation,
+EMT methods typically model the CMOP as multiple explicit
+tasks and solve them concurrently. In contrast, DSOCOL
+maintains the original problem structure without reformulating
+it into auxiliary tasks; instead, it decouples the search process
+into global exploration and diversity exploitation through
+a collaborative orthogonal learning mechanism. Second, re-
+garding the knowledge transfer strategy, while EMT focuses
+on transferring high-quality spatial coordinates (positional
+knowledge) by selecting elite solutions from different tasks,
+DSOCOL emphasizes extracting and transferring favorable
+evolutionary trends to provide more efficient directional guid-
+ance for the search.
+III. T HE PROPOSED METHOD
+A. Procedure of DSOCOL
+Algorithm 1 provides the detailed explanation of DSOCOL.
+The maximum generation T and swarm size N are input. The
+algorithm starts by evolving two different swarms S1 and S2
+(line 1). Afterwards, the evolutionary generation counter t and
+the number of niches K are initialized (line 2). The COL
+strategy is configured to execute every 75 generations, and
+the initial value for constraint relaxation εmax is set to the
+maximum constraint violation degree in the initial population
+(line 3). K uniformly weighted vectors V are initialized (line
+4). We adopt the fitness evaluation functions of SPEA2 [35]
+in this research, which can be represented as Eq. (3). It is
+worth noting that when ε = 0, this strategy is equivalent to
+CDP. In line 5, S1 is evaluated under constrained relaxation
+ε(t) to traverse infeasible regions and enhance global explo-
+ration. In contrast, ε for S2 is set to 0, thereby allowing the
+population to enter the feasible region and enhance diversity
+exploitation along the CPF (line 6). The main loop runs until
+the computational resources are exhausted (lines 7-20).
+
+
+
+γε
+(x,y) =
+(
+1, if y ≺ε x
+0, otherwise
+Rε
+x =
+X
+i∈S,i̸=x
+γε
+(x,y)
+f itness(x) =
+X
+i∈S,i̸=x
+|Rε
+x| + 1
+dist(x, x′) + 2
+(3)
+where dist(x, x′) is the Euclidean distance from x to its
+closest neighbor in the objective space.
+Algorithm 1: The framework of DSOCOL
+Input: T (maximum generation), N (swarm size)
+Output: S1 (particle swarm)
+1 Generate initial swarms S1 and S2;
+2 Set the current generation t = 1, the number of niches K = N
+10 ;
+3 Set the frequency of COL TCOL = 75, the initial constraint relaxation value
+ε(t) = εmax = maxx∈S1 CV (x);
+4 Initialize the weight vectors V = [V 1, . . . , VK];
+5 F1 ← Evaluate S1 according to Eq. (3) where ε = ε(t);
+6 F2 ← Evaluate S2 according to Eq. (3) where ε = 0;
+7 while t ≤ T do
+8 O1 ← Offspring Generation ( S1, 1, F1) (Algorithm 2);
+9 O2 ← Offspring Generation ( S2, 2, F2) (Algorithm 2);
+10 (S1, F1) ← Environmental Selection ( S1 ∪ O1 ∪ O2, N, ε(t))
+(Algorithm 4);
+11 (S2, F2) ← Niche-Guided Subset Selection ( S2 ∪ O1 ∪ O2, N, V)
+(Algorithm 5);
+12 if mod(t, TCOL ) == 0 then
+13 (O1, O2) ← Collaborative Orthogonal Learning ( S1, S2, V , N,
+ε(t)) (Algorithm 3);
+14 (S1, F1) ← Environmental Selection ( S1 ∪ O1 ∪ O2, N, ε(t))
+(Algorithm 4);
+15 (S2, F2) ← Niche-Guided Subset Selection
+(S2 ∪ O1 ∪ O2, N, V) (Algorithm 5);
+16 end
+17 t = t + 1;
+18 ε(t) ← Update the constraint relaxation value according to Eq. (7);
+19 end
+20 Return S1;
+Loser Updates : In lines 8-9, new offspring are generated
+swarm S1 and S2 based on different conditions using Algo-
+rithm 2. Specifically, in lines 1 to 11 of Algorithm 2, the
+parental swarm is randomly divided into two groups. Through
+pairwise comparison of fitness values, a winner group Sw and
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 5 ---
+5
+a loser group Sl are formed. Next, regardless of whether the
+loser group belongs to S1 or S2, new offspring are generated
+using Eq. (4), which originates from [36] and represents the
+most fundamental CSO loser group update method.
+
+
+
+∆(t) = xw(t) − xl(t)
+vl(t + 1) = r0vl(t) + r1∆(t)
+xl(t + 1) = xl(t) + vl(t + 1)
+(4)
+where xw, xl, and vl refer to the positions of winner particle
+and loser particle, and the velocity of the loser particle, with
+t indicating the current generation. r0 and r1 are uniformly
+distributed random values between 0 and 1.
+Winner Updates : Since S1 and S2 are assigned different
+task goals, we develop two approaches to further improve their
+winner groups, as observed in lines 13-17 of Algorithm 2. In
+detail, S1 and S2 update their winner group using Eq. (5) and
+Eq. (6), respectively. This approach differs from conventional
+CSO methods in that standard CSO only applies polynomial
+mutation to the winning group, whereas our method further
+enhances the winning group. While consuming the same num-
+ber of evaluations, this improvement significantly boosts CSO
+performance, which will be demonstrated in the subsequent
+ablation study section.
+
+
+
+C(t) = 1
+2 (xf
+w(t) + xl
+w(t))
+∆(t) = xf
+w(t) − xl
+w(t)
+xf
+w(t + 1) = C(t) + β
+2 ∆(t)
+xl
+w(t + 1) = C(t) − β
+2 ∆(t)
+(5)
+where xf
+w(t) and xl
+w(t) are the first and last halves of the
+winner group at generation t respectively; β is the spread fac-
+tor, controlled by a distribution index to regulate the distance
+between the generated offspring and the center point.
+xk
+w(t + 1) = xk
+w(t) + xb
+w(t) − xk
+w(t)
+2 + xi
+w(t) − xj
+w(t)
+2 (6)
+where xk
+w(t) and xb
+w(t) represent the k-th particle and the best
+solution in the winner group respectively; xi
+w(t) and xj
+w(t) are
+two distinct random particles.
+Environmental Selection: After the generation of the new
+offspring O1 and O2, Algorithms 4 and 5 are executed sepa-
+rately to select the new generation of the two swarms (lines
+10-11). In lines 12-16, the proposed COL strategy is executed
+every 75 generations. New solutions generated through trend
+learning and orthogonal learning (line 13) are then selected
+by the different methods (lines 14-15). Finally, the generation
+counter t and the constraint relaxation ε(t) are updated. In this
+paper, we use Eq. (7) to update ε(t), with parameters in this
+formula identical to the original reference [9].
+ε(t + 1) =
+(
+(1 − σ)ε(t), if fr ≤ α
+εmax, otherwise (7)
+where t denotes the index for the current generation; σ is con-
+fined within the range [σmin, 1], σmin = 1 − (1/ε(0))(Tmax/3);
+Algorithm 2: Offspring Generation
+Input: S (parent swarm), T (swarm type), F (fitness value of the S)
+Output: O (offspring swarm)
+1 while |S| > 1 do
+2 {p, q}← Randomly select two particles from S;
+3 S ← S\{p, q};
+4 if F (p) < F (q) then
+5 Sw ← q;
+6 Sl ← p;
+7 else
+8 Sw ← p;
+9 Sl ← q;
+10 end
+11 end
+12 S ′
+l ← Update Sl according to Eq. (4);
+13 if T == 1 then
+14 S ′
+w ← Update Sw according to Eq. (5);
+15 else
+16 S ′
+w ← Update Sw according to Eq. (6);
+17 end
+18 O ← {S′
+w, S ′
+l };
+19 Return O;
+εmax is determined by the highest constraint violation value
+in the initial population; α is set to 0.95; fr represents the
+feasible ratio.
+B. Collaborative Orthogonal Learning
+Unlike traditional collaboration frameworks that rely on
+sharing solution information, COL facilitates a convergence
+direction synergy between the two swarms, which is achieved
+through two distinct yet complementary mechanisms. Algo-
+rithm 3 provides the details. The COL process is executed
+within each niche (lines 2-24). Specifically, for S1, the process
+begins by identifying candidate solutions associated with the
+i-th niche (lines 3-4). Subsequently, these candidates are
+categorized into a feasible non-dominated set and a remaining
+set (line 5). If both sets are non-empty, a representative
+solution is randomly selected from each set (line 7). Otherwise,
+the candidates are sorted based on constraint violation and
+divided into two sets at the median value, from which one
+representative solution is selected respectively (lines 8-11).
+Upon determining the representative solutions, the trend learn-
+ing strategy is executed by Eq. (8) to extract the promising
+convergence direction, which is then utilized to generate the
+new experimental solutions (line 12).
+
+
+
+∆1 = xw − xl,
+∆2 = xw − xr,
+v = τ ∆1 + (1 − τ )∆2
+∥τ ∆1 + (1 − τ )∆2∥ ,
+umain = xr + ηk · v,
+(8)
+where xw and xl represent the winner and loser solutions
+within a specific niche of S1 respectively; xr is set to the upper
+bound and lower bound of the decision space respectively;
+τ = F E
+F Emax
+, where F Eand F Emax are the current and
+maximum number of function evaluations respectively; ηk is
+the kth random search step size.
+Local exploitation vector ( ∆1): Defined as xw − xl, which
+captures the relative difference between the superior and infe-
+rior individuals. It reflects local competitive trends, guiding the
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 6 ---
+6
+search to focus on the neighborhood of high-quality solutions
+to enhance the local mining capability of the CPF.
+Global exploration vector ( ∆2): Defined as xw − xr, this
+component captures a global evolutionary tendency of the
+population. Specifically, since the population is initialized
+within the bounded decision space, and the losers iteratively
+evolve by learning from winners, the winners act as a carrier
+of the most successful search experiences at the current stage.
+Consequently, the positional shift of xw across iterations
+reflects a favorable evolutionary trend. By constructing a
+direction from the decision space boundary to the winner,
+∆2 converts the population’s local successful experiences into
+a global exploration direction. This global exploration vector
+orients the search towards a broad search of the entire decision
+space, preventing stagnation in local regions and enhancing the
+population’s capability to rapidly converge towards the CPF
+across the global landscape.
+Algorithm 3: Collaborative Orthogonal Learning
+Input: S1 (particle swarm), S2 (particle swarm), V (weight vectors), N
+(swarm size), ε (constraint relaxation)
+Output: O1 (offspring swarm), O2(offspring swarm)
+1 O1 = O2 = ∅;
+2 for i = 1 to K do
+3 θ1 ← Calculate the angle between V i and each solution in S1;
+4 Φ1 ← Select ⌊ N
+K ⌋ solutions from S1 having the minimum angular
+distance to V i according to θ1;
+5 (Φnf
+1 , Φrem
+1 ) ← Divide Φ1 into two groups according to ϵ;
+// the non-dominated feasible solution set Φnf
+1
+and the rest of the solutions Φrem
+1
+6 if Φnf
+1 ̸= ∅ and Φrem
+1 ̸= ∅ then
+7 (xw, xl) ← Randomly select a solution from Φnf
+1 and Φrem
+1
+respectively;
+8 else
+9 (Φf h
+1 , Φsh
+1 ) ← Sort Φ1 in ascending order based on constraint
+violation degree;
+// Φf h
+1 and Φsh
+1 represent the sorted solutions
+from the first half and the second half
+10 (xw, xl) ← Randomly select a solution from Φf h
+1 and Φsh
+1
+respectively;
+11 end
+12 (umain, v) ← Performing the trend learning strategy based on xw
+and xl according to Eq. (8);
+13 O1 = O1 ∪ umain;
+14 θ2 ← Calculate the angle between V i and each solution in S2;
+15 Φ2 ← Select ⌊ N
+K ⌋ solutions from S2 having the minimum angular
+distance to V i according to θ2;
+16 Φnf
+2 ← Select non-dominated feasible solutions from Φ2 based on
+CDP;
+17 if Φnf
+2 ̸= ∅ then
+18 xb ← Randomly select a solution from Φnf
+2 ;
+19 else
+20 xb ← Select a solution with the minimum constraint violation
+from Φ2 ;
+21 end
+22 uaux ← Performing the orthogonal learning strategy based on xb and
+v according to Eq. (9);
+23 O2 = O2 ∪ uaux;
+24 end
+25 Return O1, O2;
+To dynamically balance these two behaviors, a time-varying
+weight coefficient τ is introduced. Specifically, in the early
+stage (small τ), the weight (1 − τ ) dominates, prompting
+the algorithm to prioritize ∆2 for global exploration. In the
+later stage (large τ), the weight τ increases, shifting the focus
+towards ∆1 for precise local exploitation.
+Conversely, since S1 has already identified a promising con-
+vergence direction, S2 is tasked with leveraging this directional
+information to explore the complementary subspace. This
+strategy effectively avoids redundant searches and maximizes
+the likelihood of uniformly covering the CPF. Given that
+the learning direction for S2 is predetermined by S1, the
+primary goal is to identify a representative solution to serve
+as a positional anchor. Specifically, candidate solutions in S2
+associated with the i-th niche are first identified (lines 14-
+15). Subsequently, the non-dominated feasible solutions within
+this set are extracted (line 16). If this set is non-empty, a
+representative is randomly selected from it; otherwise, the
+solution with the minimum constraint violation is chosen as
+the representative (lines 17-21). Finally, utilizing the promising
+direction determined by S1 and the selected representative
+solution, the orthogonal learning strategy is executed according
+to Eq. (9) (line 22).
+uaux = xb + ηj · v⊥ (9)
+where xb is the best winner solution within a specific niche
+of S2; v⊥ is the orthogonal direction derived from the con-
+vergence direction v (Eq. (8)).
+First decision  variable
+Second decision  variable
+CPS
+(a) Trend Learning
+First decision  variable
+Second decision  variable
+CPS (b) Orthogonal Learning
+Fig. 1. An illustration example of the proposed collaborative orthogonal
+learning. (a) Trend Learning in S1: The convergence direction (blue solid line)
+is synthesized from local and global vectors to guide offspring (green stars) to
+converge toward the CPS. (b) Orthogonal Learning in S2: The complementary
+direction (purple solid line) is generated by orthogonalizing the transferred
+trend (blue dashed line) to expand diversity along the CPS.
+For a clearer understanding of the proposed collaborative
+orthogonal learning strategy, Fig. 1 illustrates the process of
+executing the COL strategy within a niche. As shown in
+Fig. 1(a), the trend learning process of the main swarm ( S1)
+is depicted. Specifically, xw and xl represent the selected
+representative solutions. They form the basis for constructing
+potential convergence vectors: the local exploitation vector
+(∆1) and the global exploration vector ( ∆2 and ∆′
+2). These
+vectors are dynamically synthesized to form a unified conver-
+gence direction (the blue solid line). Subsequently, experimen-
+tal solutions (represented by green stars) are generated along
+the directions. The primary task of S1 is to identify and learn
+promising directions that enable rapid convergence towards the
+CPS, ensuring global exploration.
+In contrast, Fig. 1(b) illustrates the orthogonal learning
+process of the auxiliary swarm ( S2). Through the knowl-
+edge transfer, the convergence directions identified by S1
+are inherited by S2 (shown as the blue dashed lines). The
+selected representative solution xb then serves as a pivot to
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 7 ---
+7
+orthogonalize these inherited directions, yielding the com-
+plementary search directions (indicated by the purple solid
+lines). Similarly, S2 learns these complementary search direc-
+tions, which demonstrates that S2 focuses on exploring the
+complementary subspace to the main trend, thereby avoiding
+redundant searches and enhancing diversity along the CPS. It
+is worth noting that xb is selected as the solution closest to
+the CPF within its niche. This implies that xb is likely situated
+in close proximity to the CPS in the decision space. Selecting
+these solutions as positional anchors aims to maximize the
+probability that the determined orthogonal directions cover the
+CPS, thereby effectively expanding the distribution range of
+the solutions.
+C. Niche-Guided Subset Selection
+To better decouple the tasks of approximating the feasible
+region and distributing along the CPF, S1 and S2 are assigned
+different strategies for environmental selection. Specifically,
+S1 utilizes the "Environmental Selection()" procedure, as
+outlined in Algorithm 4, to select the next generation. The
+fitness evaluation is determined by ε (lines 2). Then, the
+next generation is selected based on the evaluated fitness
+values, and their fitness values are output (line 3-11). This
+simple environmental selection strategy is widely used in
+CMOEAs [37] to increase the selection pressure on S1 and
+thus accelerate convergence.
+Algorithm 4: Environmental Selection
+Input: O (candidate offspring), N (required size), ε (constraint relaxation)
+Output: O′ (offspring after selection), F ′ (fitness values of O′)
+1 O′ ← ∅;
+2 F ←Evaluate O according to Eq. (3) based on ε ;
+3 O′ ← {Oi|Fi < 1, i= 1, 2, · · ·, |F |};
+4 if
+O′ < Nthen
+5 Sort O based on F;
+6 O′ ← Select N particles with smaller value of F;
+7 else
+8 O′ ← perform the truncation strategy of SPEA2;
+9 end
+10 F ′ ← F(O′);
+11 Return O′, F ′;
+To enhance S2’s capability for extensive exploitation of the
+objective space, we propose a niche-guided subset selection
+(NGSS) strategy, as detailed in Algorithm 5. The core mech-
+anism consists of the following three steps:
+• First-Level Subset Division (lines 1-3) : First, a set of
+uniform weight vectors V = {V 1, ..., VK} is employed
+to divide the objective space into K distinct search
+spaces. The candidate pool O is first stratified into two
+subsets based on the CDP: Φnf and Φrem.
+• Second-Level Subset Division (lines 3-9) : Then, each
+solution in Φnf is then associated with a specific niche
+to which it has the minimum angular distance, forming
+K niches (Φnf
+1 , . . . ,Φnf
+K ). To prevent the population
+from aggregating in easily accessible feasible regions,
+we enforce a local capacity constraint L = ⌊N/K⌋
+for each niche. Specifically, if the niche Φnf
+i exceeding
+capacity, only the L solutions with the best crowding
+degree are retained. Simultaneously, redundant solutions
+are removed from Φnf
+i to the residual set Φrem.
+Algorithm 5: Niche-Guided Subset Selection
+Input: O (candidate offspring), N (required size), V (weight vectors)
+Output: O′ (offspring after selection), F ′ (fitness values of O′)
+1 θ ← Calculate the angle between each vector [V 1, . . . , VK] in V and each
+solution in O;
+2 (Φnf , Φrem) ← Divide O into two groups according to CDP;
+// the non-dominated feasible solution set Φnf and
+the rest of the solutions Φrem
+3 (Φnf
+1 , . . . ,Φnf
+K ) ← Divide Φnf into K niches according to θ;
+4 for i = 1 to K do
+5 if |Φnf
+i | > ⌊ N
+K ⌋ then
+6 Φnf
+i ← Select ⌊ N
+K ⌋ solutions with better crowding from Φnf
+i ;
+7 Φrem ← Add the unselected solutions from Φnf
+i to Φrem;
+8 end
+9 end
+10 (Φrem
+1 , . . . ,Φrem
+K ) ← Divide Φrem into K niches according to θ;
+11 for j = 1 to K do
+12 if |Φnf
+j | < ⌊ N
+K ⌋ then
+13 if |Φrem
+j | > ⌊ N
+K ⌋ − |Φnf
+j | then
+14 Φnf
+j ← Select (⌊ N
+K ⌋ − |Φnf
+j |) solutions from Φrem
+j to
+Φnf
+j based on the CDP;
+15 else
+16 Φnf
+j = Φnf
+j ∪ Φrem
+j ;
+17 Φnf
+j ← Select (⌊ N
+K ⌋ − |Φnf
+j | − |Φrem
+j |) solutions from
+Φrem that have a smaller angular distance to the j-th niche
+to Φnf
+j ;
+18 end
+19 end
+20 end
+21 O′ = Φnf
+1 ∪ Φnf
+2 · · · ∪Φnf
+K ;
+22 F ←Evaluate O′ according to Eq. (3) where ε = 0 ;
+23 Return O′, F ′;
+• Third-Level Subset Division (lines 10-20) : After adjust-
+ing the capacity of each niche, the crowded niches are
+adjusted, but sparse niches may exist. This step primarily
+involves dividing the residual set into several subsets to
+supplement the sparse niches in Φnf
+1 , . . . ,Φnf
+K . Specifi-
+cally, the updated residual set ( Φrem) is divided into K
+niches (Φrem
+1 , . . . ,Φrem
+K ). Iterate through each niche. If
+jth niche ( Φnf
+j ) remains sparse ( |Φnf
+j | < ⌊N/K⌋), it is
+filled by the jth residual subset Φrem
+j . If the number of
+solutions in Φrem
+j exceeds the required number ( ⌊ N
+K ⌋ −
+|Φnf
+j |), then select ( ⌊ N
+K ⌋ − |Φnf
+j |) solutions based on the
+CDP to fill into Φnf
+j . Otherwise, all solutions of Φrem
+j
+are added to Φnf
+j . Then, (⌊ N
+K ⌋−| Φnf
+j |−| Φrem
+j |) solutions
+are selected from Φrem based on angular distance to be
+added to Φnf
+j .
+To visualize the proposed NGSS strategy, Fig. 2 presents
+an illustrative example assuming a population size N = 6 and
+K = 3 niches. There are 2N = 12 candidate solutions ( x1-
+x12) and K weight vectors ( V 1, V2, V3). The capacity limit
+for each niche is L = ⌊N/K⌋ = 2.
+Fig. 2(a) illustrates the first-level subset division. All so-
+lutions are divided into two subsets based on the CDP: the
+non-dominated feasible set Φnf (x1, x2, x3) and the remain-
+der set Φrem (x4-x12). This step prioritizes feasibility and
+convergence.
+Fig. 2(b) shows the second-level subset division. Solutions
+in Φnf are assigned to niches based on angular distance,
+Φnf
+1 = Φ nf
+3 = ∅, Φnf
+2 = {x1, x2, x3}. Since the number of
+solutions in Φnf
+2 exceeds L (3 > 2), the most crowded solution
+x2 is removed and added to Φrem. Consequently, Φnf
+2 retains
+{x1, x3}. This level effectively controls population density in
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 8 ---
+8
+First objective variable
+Second objective variable
+Feasible regions
+(a) First-Level Subset Division
+First objective variable
+Second objective variable
+Feasible regions (b) Second-Level Subset Divi-
+sion
+First objective variable
+Second objective variable
+Feasible regions
+(c) Third-Level Subset Division
+Fig. 2. An illustration example of the proposed niche-guided subset selection.
+favored objective regions.
+Fig. 2(c) depicts the third-level subset division. The so-
+lutions in Φrem are also categorized into niches: Φrem
+1 =
+{x4, x5, x10}, Φrem
+2 = {x2, x6, . . . , x12}, and Φrem
+3 = {x9}.
+Then the sparse niches are filled (where size < L). Specif-
+ically, for the empty Φnf
+1 , solutions x4 and x5 are selected
+from Φrem
+1 based on CDP. For the empty Φnf
+3 , x9 from
+Φrem
+3 is added first. Since it still requires one more solution,
+x8 is selected from the remaining candidates due to its
+smaller angular distance to V 3. Finally, the updated niches are
+Φnf
+1 = {x4, x5}, Φnf
+2 = {x1, x3}, and Φnf
+3 = {x8, x9}. The
+third level ensures that the swarm does not exhibit preferential
+search for specific niches. In summary, the proposed NGSS
+strategy aims to uniformly search the objective space while
+ensuring a degree of convergence pressure, thereby enhancing
+the ability to capture discrete CPFs.
+D. Computational Complexity
+For DSOCOL, the time complexity of parameter and swarm
+initialization is O(M N) and O(DN ), respectively. The com-
+plexity of the swarm update including the COL strategy is
+dominated by O(M N2). The time complexity of environ-
+mental selection for the main swarm is O(N 3), primarily
+attributed to the truncation strategy of SPEA2. The time
+complexity of the NGSS strategy for the auxiliary swarm
+is O(M N2 + DN ). As a result, the overall computational
+complexity of DSOCOL in the worst case is O(N 3). Due to
+space limitations, a detailed computational complexity analysis
+is provided in Supp-Section III of the Supplementary Files.
+IV. E XPERIMENTAL STUDIES
+A. Experimental Settings
+1) Benchmark Instances: To measure the overall perfor-
+mance of the proposed DSOCOL in addressing problems with
+varying landscape, we conducted comprehensive experiments
+on 33 CMOP instances belonging to DAS-CMOPs [38], C-
+DTLZ [39], DC-DTLZ [40] and LIR-CMOPs [41]. Beyond the
+standard settings with decision variables D <100, we further
+extended these four benchmarks to large-scale configurations
+(D = 500 and D = 1000) to verify the algorithm’s efficacy
+in high-dimensional search spaces. Furthermore, a specific test
+suite named FCPs [42] was introduced to assess the robustness
+of DSOCOL against deceptive constraints. All experiments
+were performed on PlatEMO [43].
+2) CMOEAs for Comparison: To comprehensively eval-
+uate the performance of the proposed DSOCOL, we com-
+pared it against nine state-of-the-art CMOEAs: APSEA [44],
+C3M [45], CMOEMT [11], DRLOS-EMCMO [30], IM-C-
+MOEA/D [46], CMOCSO [28], DVCEA [47], LCMEA [48],
+and POCEA [32]. The selection of these comparison algo-
+rithms was driven by the need to assess algorithmic robust-
+ness across diverse constraint landscapes and varying prob-
+lem scales. Specifically, APSEA, C3M, CMOEMT, DRLOS-
+EMCMO, and IM-C-MOEA/D serve as representative solvers
+designed for standard-scale CMOPs; CMOCSO and DVCEA
+are included for their versatility in handling both standard and
+large-scale CMOPs; while LCMEA and POCEA are selected
+for their design for large-scale CMOPs.
+3) Parameter Settings: In the experimental setup, the pop-
+ulation size N is set to 100. All comparison algorithms are
+run independently on each problem 30 times. The termination
+criterion is determined by the maximum number of function
+evaluations ( F Emax), which is set to 100, 000 for standard-
+scale benchmarks, and extended to 200, 000 and 300, 000
+for large-scale benchmarks with D = 500 and D = 1000 ,
+respectively. All the parameters of GA and DE operator are
+the same as the previous references [8], [49] or original
+studies of the compared CMOEAs. Furthermore, to ensure the
+consistency of experimental conditions and the comparability
+of results, the parameters for all comparison algorithms are
+strictly configured in accordance with their original publica-
+tions.
+4) Performance Indicators: To clarify the performance of
+the methods, we use two popular performance metrics: In-
+verted Generation Distance (IGD) [50] and Hypervolume (HV)
+[51]. The Subsection II of the Supplementary Files provides
+specific information and formulas for these two indicators. In
+addition, the performance indicator results were statistically
+analyzed using KEEL software [52] at a significance level
+of 0.05. Based on the Wilcoxon analysis, the notations ′′+′′,
+′′−′′, and ′′ ≈′′ signify that the performance of the comparative
+algorithm is significantly superior to, inferior to, or statistically
+indistinguishable from DSOCOL. Furthermore, “NaN” implies
+that the algorithm failed to find any feasible solution.
+B. Comparison Studies
+1) Comparison on Standard CMOPs: To comprehen-
+sively assess the performance of DSOCOL on standard-
+scale CMOPs, the proposed DSOCOL is compared with nine
+state-of-the-art CMOEAs and the statistical results on four
+benchmark suites with the standard dimensions are presented
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 9 ---
+9
+in Tables S-V and S-VI of the Supplementary Files , re-
+spectively. For a more intuitive view, we summarize all the
+results in Table I. In terms of IGD, DSOCOL demonstrated
+significant performance advantages over the comparison meth-
+ods on 19 of the 33 problems. DVCEA achieved the best
+results in six instances. Concerning HV , DSOCOL outper-
+formed APSEA, C3M, CMOEMT, DRLOS-EMCMO, IM-
+C-MOEA/D, CMOCSO, DVCEA, LCMEA and POCEA in
+25, 31, 17, 22, 32, 16, 18, 32 and 33 of the 33 instances.
+The reasons for the poor performance of these comparison
+algorithms can be analyzed as follows.
+For APSEA, it employs an adaptive population sizing strat-
+egy within a multi-population framework to balance objec-
+tive optimization and constraint satisfaction. By dynamically
+adjusting the number of function evaluations for different
+populations, it achieves high efficiency on problems with
+simple feasibility landscapes. However, its reproduction relies
+on traditional operators that lack explicit directional guidance.
+On problems with extremely narrow feasible regions or large
+infeasible regions like LIR-CMOPs, APSEA struggles to guide
+the population across infeasible barriers, often leading to
+premature convergence in local feasible regions.
+C3M adopts a multistage framework that prioritizes con-
+straints based on the relationship between single-constraint
+Pareto fronts (PFs) and the common PF. This allows the
+algorithm to explore the objective space more freely in the
+early stages. Nevertheless, its performance is sensitive to the
+transition between stages. This mechanism risks partial CPF
+exploration under insufficient evaluations, as full constraints
+are only considered in later stages. In cases where the CPF is
+far from the UPF, the population may get trapped in distant
+infeasible regions or local optima, making it difficult to re-
+converge to the true CPF within limited evaluations.
+CMOEMT transforms a CMOP into a multitasking problem
+with three distinct tasks (CDP, constraint neglect, and ε-
+relaxation) and facilitates knowledge transfer among them.
+While solution transfer accelerates convergence for conven-
+tional problems, the transferred knowledge remains limited to
+the spatial positions of individuals. For problems with narrow
+or disjoint feasible regions, such as LIR-CMOPs, this passive
+transfer mechanism may induce negative transfer or fail to
+capture potential evolutionary trends, leading to diversity loss
+or insufficient CPF coverage.
+DRLOS-EMCMO utilizes deep reinforcement learning to
+adaptively select the most suitable evolutionary operator based
+on the population’s real-time state. This intelligent selection
+improves the algorithm’s flexibility across different search
+stages. However, the decision is primarily based on historical
+performance feedback and lacks a geometric understanding of
+the search space. Specifically different problems indeed exhibit
+preferences for different operators. However, the preference for
+rapid convergence and constraint satisfaction prevents uniform
+exploration of the objective space, resulting in missing some
+CPF fragments.
+IM-C-MOEA/D integrates inverse modeling with the frame-
+work based on decomposition, attempting to map the objective
+space back to the decision space to guide offspring generation.
+This method is highly effective for problems with a clear
+Pareto optimal set and Pareto front mapping. However, when
+confronting complex constraints that result in irregular feasible
+boundaries, the accuracy of the inverse model deteriorates
+significantly. The inaccurate model guidance may lead the
+population far away from the feasible region, leading to dual
+failures in convergence and diversity.
+CMOCSO leverages competitive learning to accelerate the
+search process. Its robust convergence capability makes it
+competitive for problems requiring fast approximations or
+multimodal characteristics, such as DTLZs. Nevertheless, its
+search behavior is often characterized by a single-path conver-
+gence toward the feasible regions. In landscapes with multiple
+local optima or complex infeasible regions, CMOCSO lacks a
+mechanism to explore complementary subspaces, limiting its
+ability to maintain a wide distribution along the CPF.
+DVCEA classifies decision variables into constraint-related
+and constraint-irrelevant categories and applies targeted varia-
+tion strategies. However, for DAS-CMOPs with convergence-
+hardness, diversity-hardness, and feasibility-hardness, the de-
+coupling of constraints may come at the expense of global
+convergence. Due to the intense coupling among variables,
+this strategy may break the evolutionary relationships, leading
+to a loss of convergence performance while attempting to
+satisfy complex constraints. Moreover, it lacks global search
+mechanism to perform the uniform search required to locate
+the narrow and discrete regions of LIR-CMOPs.
+LCMEA employs a sampling approach to generate offspring
+in preferred directions. However, the sampling points rely on
+local population distribution. For problems like LIR-CMOPs
+with fragmented CPFs and narrow feasible regions, local
+sampling fails to identify the global direction needed to cross
+large infeasible barriers, resulting in incomplete CPF coverage.
+TABLE I
+A SHORT SUMMARY OF COMPARISON STUDY RESULTS ON FOUR BENCHMARK SUITES WITH STANDARD DIMENSIONS
+DSOCOL vs (+/-/=) APSEA C3M CMOEMT DRLOS-EMCMO IM-C-MOEA/D CMOCSO DVCEA LCMEA POCEA
+DAS-CMOPs IGD 3/6/0 0/7/2 3/6/0 0/4/5 0/8/1 1/5/3 3/5/1 0/9/0 0/9/0
+HV 3/6/0 0/7/2 3/3/3 0/4/5 0/8/1 0/4/5 3/3/3 0/9/0 0/9/0
+C-DTLZs IGD 1/1/2 1/3/0 1/3/0 1/1/2 0/4/0 1/0/3 1/2/1 1/2/1 1/2/1
+HV 2/1/1 0/4/0 0/1/3 1/2/1 0/4/0 1/0/3 2/1/1 0/3/1 0/4/0
+DC-DTLZs IGD 1/3/2 0/6/0 1/3/2 1/3/2 0/6/0 2/1/3 1/4/1 0/6/0 0/6/0
+HV 1/4/1 0/6/0 2/2/2 0/3/3 0/6/0 1/1/4 0/3/3 0/6/0 0/6/0
+LIR-CMOPs IGD 0/14/0 0/14/0 0/11/3 0/12/2 0/14/0 1/11/2 2/11/1 0/14/0 0/13/1
+HV 0/14/0 0/14/0 0/11/3 0/13/1 0/14/0 2/9/3 2/11/1 0/14/0 0/14/0
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 10 ---
+10
+POCEA uses a pairing strategy to reproduce promising off-
+spring by emphasizing useful infeasible solutions. However, its
+pairing process is primarily based on static Euclidean distance
+and fails to capture dynamic trend information. When facing
+the combined three-hardness of DAS-CMOP, simple pairing
+is insufficient to generate offspring that can simultaneously
+penetrate multiple constraints and maintain distribution.
+The aforementioned CMOEAs encounter significant chal-
+lenges when confronting diverse and complex constraint land-
+scapes. To visually demonstrate the performance advantages
+of DSOCOL, we present the final solution sets across all test
+instances in Figs. S-1 to S-3 of the Supplementary Files .
+As shown, DSOCOL achieved complete coverage of the CPF
+with uniform distribution on nearly all problems. The pro-
+posed DSOCOL achieved outstanding performance because
+DSOCOL simultaneously extracts promising evolutionary di-
+rections while deeply decoupling the tasks of convergence and
+diversity. Specifically, instead of merely performing traditional
+offspring generation, the main swarm S1 identifies valuable
+convergence directions that facilitate crossing vast infeasible
+regions through trend learning. Simultaneously, the auxiliary
+swarm S2 minimizes redundant searches by receiving this
+trend information and conducting exploration within com-
+plementary orthogonal subspaces, thereby achieving efficient
+diversity exploitation. Coupled with the NGSS strategy for
+three-level subset division mechanism, DSOCOL ensures a
+uniform search across the objective space, significantly en-
+hancing its capability to capture discrete and fragmented CPFs.
+This synergistic mechanism allows DSOCOL to exhibit higher
+robustness and superior performance than these comparison
+algorithms when handling CMOPs with different landscapes.
+Furthermore, to further verify the superiority of DSOCOL,
+we conducted the Friedman test with Holm correction to
+perform the statistical analysis, which is presented in Table II.
+From the table, DSOCOL got the best rankings on IGD and
+HV . Furthermore, allp-values were below a significance level
+of 0.05, which indicating that DSOCOL significantly outper-
+forms the other nine compared CMOEAs. These results further
+validate the effectiveness of DSOCOL in balancing feasibility,
+convergence, and diversity when dealing with CMOPs with
+different characteristics.
+TABLE II
+AVERAGE RANKINGS AND p-VALUES OF IGD AND HV BY THE FRIEDMAN
+TEST OF DSOCOL AND OTHER COMPARED CMOEA S ON FOUR
+STANDARD BENCHMARK SUITES .
+Algorithm IGD Ranking p-value HV Ranking p-value
+APSEA 6.5455 0.000000 6.4091 0.000000
+C3M 5.4545 0.000006 5.3182 0.000080
+CMOEMT 4.4848 0.001319 4.0909 0.021616
+DRLOS-EMCMO 3.7576 0.025347 4.0303 0.026709
+IM-C-MOEA/D 9.5303 0.000000 9.5303 0.000000
+CMOCSO 3.5909 0.044171 3.8939 0.042074
+DVCEA 4.9545 0.000122 4.9394 0.000592
+LCMEA 7.0909 0.000000 6.8030 0.000000
+POCEA 7.5000 0.000000 7.6061 0.000000
+DSOCOL 2.0909 2.3788
+2) Comparison on Large-Scale CMOPs: For validating the
+proposed DSOCOL’s performance in handling CMOPs with
+large-scale decision variable landscapes, we further compared
+DSOCOL with nine CMOEAs on the four benchmarks with
+large-scale decision variables ( D = 500 and 1000). The
+statistical results for IGD and HV across two dimensions are
+reported in Tables S-VII and S-VIII of the Supplementary
+Files. The summary results are reported in Table S-II of the
+Supplementary Files, indicating that DSOCOL obtained clear
+advantages over most compared CMOEAs on both IGD and
+HV , demonstrating its strong scalability in handling CMOPs
+with large-scale search space landscape. Furthermore, the
+Friedman test results in Table S-III of the Supplementary
+Files show that DSOCOL achieved the best average rankings
+on both IGD and HV , with all p-values below 0.05. Therefore,
+the experimental results on large-scale CMOPs statistically
+verify the superiority of DSOCOL. Due to space limitations,
+the detailed analysis of the experimental results is provided in
+Supp-Section IV of the Supplementary Files .
+3) Comparison on Special CMOPs: To further evaluate
+the robustness of DSOCOL, we conducted experiments on
+the FCP benchmark suite with special difficulties. Distinct
+from conventional benchmarks, the FCP series initializes the
+population in the transition zone between the UPF and the
+CPF. A defining characteristic of this suite is the presence of
+fraudulent constraints, where the constraint violation degrees
+exhibit non-monotonicity. These deceptive landscapes act as
+evolutionary traps, requiring algorithms to maintain individu-
+als with suboptimal objective values and lower feasibility to
+traverse the fraudulent regions. The statistical IGD and HV
+results on FCP1-5 are summarized in Tables S-IX and S-X of
+the Supplementary Files , with Fig. S-6 visualizing the final
+solution distribution on FCP4. It is evident that among all
+compared methods, only LCMEA, which utilizes a sampling
+approach, managed to yield feasible solutions across all prob-
+lems. Nevertheless, DSOCOL got the best results on four out
+of five instances. Conversely, all other competing algorithms
+failed to identify any feasible regions on FCP1-4. This is
+because these methods prioritize constraint satisfaction or
+objective optimization and perform knowledge transfer solely
+based on positional information of solutions. Consequently,
+they failed to fully explore the objective space, leading to
+their failure to handle problems with deceptive constraints.
+These results further verify that the proposed strategies can
+effectively handle CMOPs with diverse landscapes.
+C. Ablation Studies
+In this section, we set up five variants to further confirm the
+effectiveness and necessity of the different components.
+• DSOCOL1: The auxiliary swarm S2 employs Algorithm 4
+instead of the proposed NGSS strategy;
+• DSOCOL2: The winners groups of both swarms are
+updated solely through polynomial mutation;
+• DSOCOL3: The proposed COL strategy is not imple-
+mented;
+• DSOCOL4: The trend learning strategy is not imple-
+mented (without Eq. (8));
+• DSOCOL5: The orthogonal learning strategy is not im-
+plemented (without Eq. (9));
+To fully validate the overall performance of the proposed
+methods, we compared DSOCOL and its five variants under
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 11 ---
+11
+both standard dimensions and 1000 dimensions across four
+benchmarks. Table III provides all the summary results of the
+ablation experiments and the detailed results of IGD and HV
+is presented in Tables S-XI and S-XII of the Supplementary
+Files. The following conclusions can be drawn from these
+results: (1) DSOCOL significantly outperformed DSOCOL1,
+which demonstrates that the proposed NGSS strategy can
+maintain comprehensive exploration for the whole objective
+space. (2) Compared to DSOCOL2, DSOCOL performed
+superior or competitive performance in 78% of cases, validat-
+ing the effectiveness of further improvements to the winner
+group. (3) DSOCOL outperformed DSOCOL3, DSOCOL4,
+and DSOCOL5 confirming the effectiveness of the proposed
+COL strategy.
+TABLE III
+SUMMARY RESULTS OF DSOCOL AND ITS FIVE VARIANTS ON THE FOUR
+BENCHMARK SUITES WITH VARYING DIMENSIONS .
+IGD(+/ − / ≈) HV( +/ − / ≈)
+DSOCOL1 vs. DSOCOL 5/25/36 8/19/39
+DSOCOL2 vs. DSOCOL 17/33/16 12/27/27
+DSOCOL3 vs. DSOCOL 8/36/22 1/32/33
+DSOCOL4 vs. DSOCOL 5/44/17 1/40/25
+DSOCOL5 vs. DSOCOL 4/20/43 1/22/43
+To clarify the impact of the proposed NGSS strategy, we
+plot the populations, with the median IGD among 30 runs
+on LIR-CMOP3, obtained by DSOCOL1 and DSOCOL are
+presented in Fig. 3. It was evident that although DSOCOL1
+successfully converged to the feasible region, it exhibited
+poor performance as it only captured a limited portion of
+the CPF. This failure was primarily attributed to the absence
+of the NGSS strategy, which caused DSOCOL1 to converge
+rapidly in a clustered state that led the population into local
+feasible regions. Specifically, for problems like LIR-CMOP3
+with discrete CPFs, once DSOCOL1 became trapped in local
+optima, it lacked the capability to re-distribute across the
+objective space to locate all fragmented CPF segments. In
+contrast, DSOCOL, equipped with the NGSS strategy, facil-
+itated a uniform search throughout the objective space and
+yielded highly competitive results, which provides compelling
+evidence of the effectiveness and necessity of NGSS strategies
+in maintaining population diversity.
+0.6 0.8 1 1.2 1.4
+ f1
+0.7
+0.8
+0.9
+1
+1.1
+1.2
+1.3
+1.4 f2
+DSOCOL1 on LIR-CMOP3
+0.6 0.8 1 1.2 1.4
+ f1
+0.7
+0.8
+0.9
+1
+1.1
+1.2
+1.3
+1.4 f2
+DSOCOL on LIR-CMOP3
+Fig. 3. Populations obtained by DSOCOL1 and DSOCOL on LIR-CMOP3.
+Furthermore, the effectiveness of the proposed improve-
+ments to the winner group and the COL strategy was further
+validated through Fig. 4. Clearly the convergence speed of
+DSOCOL2, which only performed polynomial mutation on
+the winner group, was significantly lower than DSOCOL
+0.5 1 1.5 2 2.5 3
+Evaluations 105
+200
+400
+600
+800
+1000
+1200
+1400IGD
+IGD convergence on DC1-DTLZ3 (D = 1000)
+DSOCOL1
+DSOCOL2
+DSOCOL3
+DSOCOL
+0.5 1 1.5 2 2.5 3
+Evaluations 105
+50
+100
+150
+200
+250
+300
+350IGD
+IGD convergence on LIR-CMOP11 (D = 1000)
+DSOCOL1
+DSOCOL2
+DSOCOL3
+DSOCOL
+Fig. 4. Convergence results of DSOCOL and DSOCOL1-3 on DC1-DTLZ3
+and LIR-CMOP11.
+and DSOCOL1, demonstrating that the performance of CSO
+operator can be effectively enhanced by further improving
+the winner groups through Eqs. (5) and (6). Likewise, the
+convergence rate of DSOCOL3 without the COL strategy
+deteriorated significantly and was markedly lower than those
+of DSOCOL, DSOCOL1, and DSOCOL2, which incorporated
+the COL strategy. These results confirmed that the COL strat-
+egy can successfully capture promising evolutionary directions
+and accelerate population convergence toward the CPF.
+0.5 1 1.5 2 2.5 3
+Evaluations 105
+50
+100
+150
+200
+250
+300
+350IGD
+IGD convergence on LIR-CMOP10 (D = 1000)
+DSOCOL4
+DSOCOL5
+DSOCOL
+0.5 1 1.5 2 2.5 3
+Evaluations 105
+1000
+2000
+3000
+4000
+5000IGD
+IGD convergence on DC3-DTLZ1 (D = 1000)
+DSOCOL4
+DSOCOL5
+DSOCOL
+Fig. 5. Convergence results of DSOCOL and DSOCOL4-5 on LIR-CMOP10
+and DC3-DTLZ1.
+To further investigate the effectiveness and respective roles
+of trend learning and orthogonal learning in the COL strat-
+egy, Figs. 5 and 6 are presented for detailed analysis. As
+shown in Fig. 5, DSOCOL4, which excludes trend learn-
+ing component, exhibited a significantly slower convergence
+speed than DSOCOL5 and DSOCOL, both of which incorpo-
+rated trend learning. Moreover, DSOCOL converged slightly
+slower than DSOCOL5 on these two problems. This was
+because DSOCOL allocated part of the function evaluations
+to orthogonal learning in order to explore complementary
+search regions, whereas DSOCOL5 focused entirely on trend
+learning. These results indicated that trend learning is able
+to identify promising evolutionary directions, thereby accel-
+erating the convergence toward the CPF. Fig. 6 illustrated
+the final populations obtained by DSOCOL5 and DSOCOL
+on C-DTLZ2 and LIR-CMOP3. It could be observed that
+both DSOCOL5 and DSOCOL, equipped with trend learning,
+achieved similar convergence performance. However, the final
+population achieved by DSOCOL, which additionally incor-
+porated orthogonal learning, was noticeably more uniformly
+distributed than that of DSOCOL5. This finding suggested
+that orthogonal learning is capable of exploring search regions
+complementary to those identified by trend learning, thereby
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 12 ---
+12
+enhancing the exploration of neighborhoods around exploited
+areas and ultimately improving population diversity.
+0
+0 0
+0.5
+0.5 0.5
+ f3
+DSOCOL5 on C2-DTLZ2 (D = 1000)
+ f1 f2
+1
+1 1
+0
+0 0
+0.5 f3
+DSOCOL on C2-DTLZ2 (D = 1000)
+0.5 0.5
+ f2  f1
+1
+1 1
+0.6 0.8 1 1.2 1.4
+ f1
+0.6
+0.7
+0.8
+0.9
+1
+1.1
+1.2
+1.3 f2
+DSOCOL5 on LIR-CMOP4 (D = 1000)
+0.6 0.8 1 1.2 1.4
+ f1
+0.6
+0.8
+1
+1.2
+1.4 f2
+DSOCOL on LIR-CMOP4 (D = 1000)
+Fig. 6. Populations obtained by DSOCOL5 and DSOCOL on C-DTLZ2 and
+LIR-CMOP3.
+Eventually, we conducted the Friedman test on two metrics
+to further verify the necessity and effectiveness of the different
+components of DSOCOL. Table IV displays the statistical
+results, showing that DSOCOL always has the highest rank-
+ings. The p-values were less than 0.05, which indicates that
+DSOCOL is significantly better than these variants. There-
+fore, the experimental results further verify the necessity
+and effectiveness of the proposed NGSS strategy, the winner
+group improvement mechanism, and the COL strategy. These
+proposed methods ensure that the swarm can converge rapidly
+toward the CPF while maintaining extensive exploration across
+the entire objective space, thereby enhancing the algorithm’s
+capability for a comprehensive search along the CPF.
+TABLE IV
+AVERAGE RANKINGS AND p-VALUES OF DSOCOL AND FIVE VARIANTS
+BY THE FRIEDMAN TEST ON FOUR BENCHMARK SUITES WITH VARYING
+SCALES .
+Algorithm IGD Ranking p-value HV Ranking p-value
+DSOCOL1 3.5909 0.000217 3.2955 0.040652
+DSOCOL2 3.5682 0.000285 3.4773 0.009178
+DSOCOL3 3.6894 0.000063 3.9773 0.000035
+DSOCOL4 4.6667 0.000000 4.5985 0.000000
+DSOCOL5 3.0985 0.028769 3.0227 0.226421
+DSOCOL 2.3864 2.6288
+In addition, it is worth noting that DSOCOL4 obtained
+a worse ranking than DSOCOL3. Although DSOCOL3 did
+not incorporate the COL strategy, it was still able to achieve
+gradual convergence by relying on the environmental selection
+mechanism. In contrast, the COL strategy in DSOCOL4 only
+included orthogonal learning without trend learning, which
+caused the population to consume additional function evalua-
+tions to explore complementary regions via orthogonal learn-
+ing when it was unable to converge rapidly toward the CPF.
+Under such slow convergence conditions, further intensifying
+the exploration of complementary regions to enhance diversity
+became detrimental to overall performance, ultimately leading
+DSOCOL4 to achieve the worst ranking among the compared
+variants. This result also indirectly verified that the search
+directions explored by orthogonal learning are different from
+and complementary to the evolutionary directions identified
+by trend learning for rapid convergence, indicating that the
+COL strategy can achieve its best performance only when
+orthogonal learning and trend learning operate in a coordinated
+manner to properly balance convergence and diversity.
+D. Parameter Analysis
+DSOCOL involves two parameters: the execution frequency
+of the COL strategy ( TCOL) and the number of niches ( K).
+Detailed statistical results for IGD and HV are provided in
+Table S-XIII and S-XIV of the Supplementary Files. In this
+study, TCOL and K are set to 75 and ⌊ N
+10 ⌋, respectively. Due
+to space limitations, a detailed analysis regarding the charac-
+teristics and sensitivity of these two parameters is provided in
+Supp-Section V of the Supplementary Files.
+E. Real-World Application
+In contrast to the previous benchmark suite instances, real-
+world CMOPs (RWCMOPs) show distinct characteristics. To
+evaluate DSOCOL’s performance in practical applications, we
+further compared the performance of DSOCOL with the nine
+comparison algorithms in ten real-world applications in four
+different domains, which are as follows.
+• Mechanical Design Problem: Pressure Vessel De-
+sign [53], Four Bar Plane Truss [54], Front Rail Design
+[55].
+• Chemical Engineering Problems: Heat Exchanger Net-
+work Design [56], Reactor Network Design [57].
+• Process and Synthesis Problems: Process Design Prob-
+lem [58], Process Synthesis Problem [59], Process Flow
+Sheeting Problem [60].
+• Power Electronics Problems: Synchronous Optimal
+Pulse-width Modulation of 3-level Inverters [61], Syn-
+chronous Optimal Pulse-width Modulation of 7-level In-
+verters [62].
+Since the true CPFs of these real-world applications are not
+known, we use the HV indicator to measure the performance
+of CMOEAs. Compared to the previous benchmark instances,
+these RWCMOPs are more challenging in several respects.
+First, the objective functions in practical problems may exhibit
+significantly different numerical scales, making it difficult for
+an algorithm to establish a credible boundary without sufficient
+convergence pressure. Second, these applications may involve
+highly nonlinear constraints and irregular Pareto front, under
+which the population can easily be trapped in local feasible
+regions or even fail to obtain feasible solutions. Third, some
+real-world problems are also associated with large or strongly
+coupled search spaces, which further increases the difficulty of
+locating high-quality feasible regions efficiently. Under such
+conditions, the advantage of DSOCOL lies in its ability to
+simultaneously ensure convergence reliability and distribution
+quality. Specifically, the COL strategy enables the main swarm
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 13 ---
+13
+TABLE V
+THE MEDIAN HV RESULTS OBTAINED BY DSOCOL AND ALL COMPARISON ALGORITHMS ON TEN RWCMOP S AMONG 30 RUNS . T HE BEST RESULT IN
+EACH ROW IS HIGHLIGHTED .
+Problem APSEA C3M CMOEMT DRLOS-EMCMO IM-C-MOEA/D CMOCSO DVCEA LCMEA POCEA DSOCOL
+Pressure Vessel Design 6.0454e-1 (9.59e-4)− 6.0138e-1 (2.68e-3)− 5.9416e-1 (2.07e-3)− 6.0514e-1 (9.75e-4)− 5.8511e-1 (6.09e-3)− 5.4646e-1 (4.50e-2)− 6.0601e-1 (3.80e-4)≈ 6.0205e-1 (2.11e-3)− 5.8100e-1 (7.75e-3)− 6.0603e-1(8.24e-4)Four Bar Plane Truss 4.0936e-1 (1.75e-4)− 4.0956e-1 (1.29e-4)− 4.0943e-1 (1.13e-4)− 4.0972e-1 (8.71e-5)≈ 4.0196e-1 (1.84e-3)− 4.0962e-1 (1.27e-4)− 4.0939e-1 (1.59e-4)− 4.1020e-1(1.02e-4)+ 3.3625e-1 (1.22e-2)− 4.0970e-1 (7.78e-5)Front Rail Design 4.0505e-2 (5.44e-6)≈ 4.0508e-2 (4.01e-6)≈ 4.0509e-2 (4.59e-6)≈ 4.0504e-2 (6.29e-6)≈ 3.9969e-2 (2.10e-4)− 4.0508e-2 (5.64e-6)≈ 4.0506e-2 (1.52e-5)≈ 4.0492e-2 (3.38e-5)≈ 4.0323e-2 (5.99e-5)− 4.0510e-2(4.57e-6)
+Heat Exchanger Nwteork Design NaN (NaN)− NaN (NaN)− NaN (NaN)− NaN (NaN)− NaN (NaN)− NaN (NaN)− 1.0000e+0 (0.00e+0)− 8.3095e-1 (3.37e-1)− 2.0000e-1 (4.47e-1)− 5.0364e+4(7.12e+4)Reactor Network Design NaN (NaN)− 1.8758e+0 (3.50e+0)≈ 9.9451e-1 (9.19e-3)≈ 8.3152e-1 (2.51e-1)− NaN (NaN)− 9.9856e-1 (0.00e+0)≈ 9.3315e-1 (7.21e-2)− 7.0574e-1 (2.92e-1)− 1.0365e+0 (1.56e-1)− 3.4847e+0(6.12e+0)
+Process Design Problem 1.3839e-1 (2.77e-2)≈ 1.4523e-1 (6.23e-3)+ 1.4802e-1 (2.67e-2)≈ 1.4537e-1 (1.03e-2)+ 1.8376e-1(2.07e-2)+ 9.8472e-2 (1.35e-2)− 1.3715e-1 (1.09e-2)≈ 1.2306e-1 (2.81e-2)− 1.3076e-1 (3.21e-2)≈ 1.3543e-1 (1.63e-2)Process Synthesis Problem 7.6198e-1 (1.93e-2)− 7.6952e-1 (7.32e-3)− 7.5167e-1 (2.88e-2)− 7.72851e-1 (4.96e-3)− 6.9682e-1 (1.00e-1)− 6.2336e-1 (5.38e-2)− 7.8209e-1 (2.69e-3)≈ 7.2110e-1 (7.74e-2)− 3.3347e-1 (2.35e-1)− 7.8294e-1(2.19e-3)Process Flow Sheeting Problem 7.6198e-1 (1.93e-2)− 7.6952e-1 (7.32e-3)− 7.5167e-1 (2.88e-2)− 7.7851e-1 (4.96e-3)− 6.9682e-1 (1.00e-1)− 6.2336e-1 (5.38e-2)− 7.8209e-1 (2.69e-3)− 7.2110e-1 (7.74e-2)− 3.3347e-1 (2.35e-1)− 7.8606e-1(1.17e-3)
+Synchronous Optimal Pulse-width Modulation of 3-level Inverters NaN (NaN)− NaN (NaN)− NaN (NaN)− NaN (NaN)− NaN (NaN)− NaN (NaN)− 1.8821e-1 (1.95e-1)≈ NaN (NaN)− NaN (NaN)− 4.8626e-1(3.10e-1)Synchronous Optimal Pulse-width Modulation of 7-level Inverters7.7564e-1(4.57e-2)+ 5.9497e-1 (2.33e-1)≈ 6.6799e-1 (2.22e-1)+ 7.6749e-1 (5.34e-2)+ 6.0888e-1 (3.05e-1)≈ 5.6533e-1 (3.54e-1)≈ 7.6420e-1 (5.20e-2)+ 5.4489e-1 (1.60e-1)≈ 2.9724e-1 (3.10e-1)− 4.9731e-1 (1.74e-1)+/−/≈ 1/7/2 1/6/3 1/6/3 2/6/2 1/8/1 0/7/3 1/4/5 1/7/2 0/9/1“NaN (NaN)” indicates that the algorithm failed to find any feasible solution across 30 independent runs.
+to learn promising evolutionary directions and maintain suf-
+ficient convergence pressure to approach a reliable objective
+boundary, while the auxiliary swarm explores complementary
+subspaces to reduce redundant search. In addition, the NGSS
+strategy helps preserve uniformity in the objective space,
+which is particularly important when the practical Pareto front
+is irregular or partially disconnected. As shown in Table V, our
+proposed method achieves the overall highest quality results in
+these practical applications, with DVCEA following closely.
+The results validate that DSOCOL successfully maintains a
+balance between convergence, feasibility, and diversity, even
+in the context of RWCMOPs. In general, the superior or
+competitive performance of DSOCOL in solving real-world
+applications is demonstrated, compared with other methods.
+V. C ONCLUSION
+In this paper, we proposed a dual-swarm evolutionary al-
+gorithm with collaborative orthogonal learning, named DSO-
+COL, to effectively balance feasibility, convergence and diver-
+sity in constrained multi-objective optimization with complex
+landscapes. Unlike conventional collaborative frameworks that
+primarily exchange solution coordinates, DSOCOL incorpo-
+rates evolutionary direction learning into the collaborative
+paradigm. The main swarm identifies promising convergence
+directions and transfers them as reusable search experience to
+the auxiliary swarm, enabling rapid convergence toward the
+CPF and achieving uniform search of the CPF. The primary
+contribution is the geometric synergy between trend learning
+and orthogonal learning. Specifically, trend learning drives
+rapid convergence toward the CPF, whereas orthogonal learn-
+ing explores the orthogonal complement of the convergence
+direction, thereby reducing redundant searches and broaden-
+ing the solution distribution. Moreover, the proposed NGSS
+strategy employs a three-level subset division mechanism to
+enable the preferential exploration of sparse niches, ensuring
+uniform distribution within the objective space.
+Extensive results on 33 benchmark instances and 10 real-
+world problems demonstrate significant improvements in both
+convergence and distribution, including large-scale cases. In
+practical applications such as pressure vessel design and reac-
+tor network design, DSOCOL provides decision-makers with a
+well-converged and well-distributed set of trade-off solutions,
+facilitating more informed trade-off decisions in real-world
+cases with nonlinear constraints. Despite these advancements,
+extending the collaborative learning paradigm to constrained
+many-objective optimization problems (CMaOPs, M > 3)
+remains challenging, as traditional Pareto dominance-based
+selection mechanisms perform poorly in this scenario. Future
+research will investigate performing orthogonal searches on
+Cartesian products to address the exponential growth in the
+cardinality of non-dominated solution sets in CMaOPs [63].
+By reducing the challenge from an exponential to a polynomial
+complexity, it is promising to expand DSOCOL into CMaOPs.
+REFERENCES
+[1] R. Li, L. Wang, H. Sang, and L. Yao, “Knowledge-guided multiview
+hierarchical evolutionary algorithm for flexible job shop scheduling
+with finite skilled workers,” IEEE Transactions on Systems, Man, and
+Cybernetics: Systems, vol. 55, no. 10, pp. 7259–7272, 2025.
+[2] Y . Shan, X.-P. Xie, and Z. Mao, “Co-design of a switching-type
+control scheme for nonlinear networked systems with protocol-based
+communication and its application to circuits,” IEEE Transactions on
+Automation Science and Engineering , vol. 22, pp. 5828–5840, 2025.
+[3] T. Zhang, D. Li, Y . Li, and W. Gong, “Constrained multitasking
+optimization via co-evolution and domain adaptation,” Swarm and
+Evolutionary Computation, vol. 87, p. 101570, 2024.
+[4] F. Ming, W. Gong, B. Xue, M. Zhang, and Y . Jin, “Automated con-
+figuration of evolutionary algorithms via deep reinforcement learning
+for constrained multiobjective optimization,” IEEE Transactions on
+Cybernetics, vol. 55, no. 12, pp. 5877–5890, 2025.
+[5] J. Liu, Y . Wang, G. Sun, and T. Pang, “Constrained evolutionary
+bayesian optimization for expensive constrained optimization problems
+with inequality constraints,” IEEE Transactions on Systems, Man, and
+Cybernetics: Systems, vol. 55, no. 3, pp. 2009–2021, 2025.
+[6] K. Yu, F. Chen, M. Yu, J. Liang, and K. Chen, “Modal detection
+informed classification evaluation via ensemble networks for expensive
+constrained multimodal optimization,” IEEE Transactions on Neural
+Networks and Learning Systems , pp. 1–15, 2025.
+[7] H. Wu, Q. Chen, J. Chen, Y . Jin, J. Ding, X. Zhang, and T. Chai, “A
+multistage expensive constrained multiobjective optimization algorithm
+based on ensemble infill criterion,” IEEE Transactions on Evolutionary
+Computation, vol. 29, no. 6, pp. 2357–2371, 2025.
+[8] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan, “A fast and elitist
+multiobjective genetic algorithm: NSGA-II,” IEEE Transactions on
+Evolutionary Computation, vol. 6, no. 2, pp. 182–197, 2002.
+[9] Q. Zhu, Q. Zhang, and Q. Lin, “A constrained multiobjective evolution-
+ary algorithm with detect-and-escape strategy,” IEEE Transactions on
+Evolutionary Computation, vol. 24, no. 5, pp. 938–947, Oct. 2020.
+[10] Z. Fan, H. Li, C. Wei, W. Li, H. Huang, X. Cai, and Z. Cai, “An
+improved epsilon constraint handling method embedded in moea/d
+for constrained multi-objective optimization problems,” in 2016 IEEE
+Symposium Series on Computational Intelligence (SSCI) , 2016, pp. 1–8.
+[11] F. Ming, W. Gong, L. Wang, and L. Gao, “Constrained multiobjective
+optimization via multitasking and knowledge transfer,” IEEE Transac-
+tions on Evolutionary Computation , vol. 28, no. 1, pp. 77–89, 2024.
+[12] Z. Sun, H. Ren, G. G. Yen, T. Chen, J. Wu, H. An, and J. Yang,
+“An evolutionary algorithm with constraint relaxation strategy for highly
+constrained multiobjective optimization,” IEEE Transactions on Cyber-
+netics, vol. 53, no. 5, pp. 3190–3204, 2023.
+[13] K. Qiao, K. Yu, B. Qu, J. Liang, H. Song, and C. Yue, “An evolutionary
+multitasking optimization framework for constrained multiobjective op-
+timization problems,” IEEE Transactions on Evolutionary Computation ,
+vol. 26, no. 2, pp. 263–277, 2022.
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 14 ---
+14
+[14] J. Wang, G. Liang, and J. Zhang, “Cooperative differential evolution
+framework for constrained multiobjective optimization,” IEEE Transac-
+tions on Cybernetics , vol. 49, no. 6, pp. 2060–2072, 2019.
+[15] Z. Fan, W. Li, X. Cai, H. Li, C. Wei, Q. Zhang, K. Deb, and E. Goodman,
+“Push and pull search for solving constrained multi-objective optimiza-
+tion problems,” Swarm and Evolutionary Computation, vol. 44, pp. 665–
+679, 2019.
+[16] W.-Q. Ying, W.-P. He, Y .-X. Huang, D.-T. Li, and Y . Wu, “An adaptive
+stochastic ranking mechanism in moea/d for constrained multi-objective
+optimization,” in 2016 International Conference on Information System
+and Artificial Intelligence (ISAI) , 2016, pp. 514–518.
+[17] M. A. Jan and R. A. Khanum, “A study of two penalty-parameterless
+constraint handling techniques in the framework of moea/d,” Applied
+Soft Computing, vol. 13, no. 1, pp. 128–148, 2013.
+[18] Q. Gu, Q. Wang, N. N. Xiong, S. Jiang, and L. Chen, “Surrogate-assisted
+evolutionary algorithm for expensive constrained multi-objective discrete
+optimization problems,” Complex & Intelligent Systems, vol. 8, pp. 2699
+– 2718, 2021.
+[19] Z.-Z. Liu, Y . Wang, and B.-C. Wang, “Indicator-based constrained
+multiobjective evolutionary algorithms,” IEEE Transactions on Systems,
+Man, and Cybernetics: Systems , vol. 51, no. 9, pp. 5414–5426, 2021.
+[20] Z. Ma and Y . Wang, “Shift-based penalty for evolutionary constrained
+multiobjective optimization and its application,” IEEE Transactions on
+Cybernetics, vol. 53, no. 1, pp. 18–30, 2023.
+[21] L. Jiao, J. Luo, R. Shang, and F. Liu, “A modified objective func-
+tion method with feasible-guiding strategy to solve constrained multi-
+objective optimization problems,” Applied Soft Computing , vol. 14, pp.
+363–380, 2014.
+[22] K. Yu, J. Liang, B. Qu, Y . Luo, and C. Yue, “Dynamic selection
+preference-assisted constrained multiobjective differential evolution,”
+IEEE Transactions on Systems, Man, and Cybernetics: Systems , vol. 52,
+no. 5, pp. 2954–2965, 2022.
+[23] F. Vaz, Y . Lavinas, C. Aranha, and M. Ladeira, “Exploring constraint
+handling techniques in real-world problems on moea/d with limited
+budget of evaluations,” in Evolutionary Multi-Criterion Optimization ,
+H. Ishibuchi, Q. Zhang, R. Cheng, K. Li, H. Li, H. Wang, and A. Zhou,
+Eds. Cham: Springer International Publishing, 2021, pp. 555–566.
+[24] Y . Tian, Y . Zhang, Y . Su, X. Zhang, K. C. Tan, and Y . Jin, “Balancing
+objective optimization and constraint satisfaction in constrained evolu-
+tionary multiobjective optimization,” IEEE Transactions on Cybernetics,
+vol. 52, no. 9, pp. 9559–9572, 2022.
+[25] Y . Xiang, X. Yang, H. Huang, and J. Wang, “Balancing constraints and
+objectives by considering problem types in constrained multiobjective
+optimization,” IEEE Transactions on Cybernetics , vol. 53, no. 1, pp.
+88–101, 2023.
+[26] B. Liu, H. Ma, X. Zhang, and Y . Zhou, “A memetic co-evolutionary
+differential evolution algorithm for constrained optimization,” in 2007
+IEEE Congress on Evolutionary Computation , 2007, pp. 2996–3002.
+[27] Y . Yang, J. Liu, and S. Tan, “A partition-based constrained multi-
+objective evolutionary algorithm,” Swarm and Evolutionary Computa-
+tion, vol. 66, p. 100940, 2021.
+[28] F. Ming, W. Gong, D. Li, L. Wang, and L. Gao, “A competitive and
+cooperative swarm optimizer for constrained multiobjective optimization
+problems,” IEEE Transactions on Evolutionary Computation , vol. 27,
+no. 5, pp. 1313–1326, 2023.
+[29] X. Yu, X. Yu, Y . Lu, G. G. Yen, and M. Cai, “Differential evolution mu-
+tation operators for constrained multi-objective optimization,” Applied
+Soft Computing, vol. 67, pp. 452–466, 2018.
+[30] F. Ming, W. Gong, L. Wang, and Y . Jin, “Constrained multi-objective op-
+timization with deep reinforcement learning assisted operator selection,”
+IEEE/CAA Journal of Automatica Sinica , vol. 11, no. 4, pp. 919–931,
+2024.
+[31] M. Miyakawa, K. Takadama, and H. Sato, “Directed mating using
+inverted pbi function for constrained multi-objective optimization,” in
+2015 IEEE Congress on Evolutionary Computation (CEC) , 2015, pp.
+2929–2936.
+[32] C. He, R. Cheng, Y . Tian, X. Zhang, K. C. Tan, and Y . Jin, “Paired
+offspring generation for constrained large-scale multiobjective optimiza-
+tion,” IEEE Transactions on Evolutionary Computation , vol. 25, no. 3,
+pp. 448–462, 2021.
+[33] A. Gupta, Y .-S. Ong, and L. Feng, “Insights on transfer optimization:
+Because experience is the best teacher,” IEEE Transactions on Emerging
+Topics in Computational Intelligence , vol. 2, no. 1, pp. 51–64, 2018.
+[34] K. Qiao, K. Yu, B. Qu, J. Liang, H. Song, C. Yue, H. Lin, and
+K. C. Tan, “Dynamic auxiliary task-based evolutionary multitasking
+for constrained multiobjective optimization,” IEEE Transactions on
+Evolutionary Computation, vol. 27, no. 3, pp. 642–656, 2023.
+[35] E. Zitzler, M. Laumanns, and L. Thiele, “Spea2: Improving the strength
+pareto evolutionary algorithm,” TIK-Report, vol. 103, 07 2001.
+[36] R. Cheng and Y . Jin, “A competitive swarm optimizer for large scale
+optimization,” IEEE Transactions on Cybernetics , vol. 45, no. 2, pp.
+191–204, 2015.
+[37] K. Qiao, J. Liang, K. Yu, X. Ban, C. Yue, B. Qu, and P. N. Suganthan,
+“Constraints separation based evolutionary multitasking for constrained
+multi-objective optimization problems,” IEEE/CAA Journal of Automat-
+ica Sinica, vol. 11, no. 8, pp. 1819–1835, 2024.
+[38] Z. Fan, W. Li, X. Cai, H. Li, C. Wei, Q. Zhang, K. Deb, and E. Good-
+man, “Difficulty adjustable and scalable constrained multiobjective test
+problem toolkit,” Evolutionary Computation, vol. 28, no. 3, pp. 339–378,
+2020.
+[39] H. Jain and K. Deb, “An evolutionary many-objective optimization
+algorithm using reference-point based nondominated sorting approach,
+part ii: Handling constraints and extending to an adaptive approach,”
+IEEE Transactions on Evolutionary Computation , vol. 18, no. 4, pp.
+602–622, 2014.
+[40] K. Li, R. Chen, G. Fu, and X. Yao, “Two-archive evolutionary algorithm
+for constrained multiobjective optimization,” IEEE Transactions on
+Evolutionary Computation, vol. 23, no. 2, pp. 303–315, 2019.
+[41] Z. Fan, W. Li, X. Cai, H. Huang, Y . Fang, Y . Yugen, J. Mo, C. Wei,
+and E. Goodman, “An improved epsilon constraint-handling method
+in moea/d for cmops with large infeasible regions,” Soft Computing ,
+vol. 23, pp. 12 491–12 510, 2019.
+[42] J. Yuan, H. Liu, Y .-S. Ong, and Z. He, “Indicator-based evolutionary
+algorithm for solving constrained multiobjective optimization problems,”
+IEEE Transactions on Evolutionary Computation , vol. 26, no. 2, pp.
+379–391, 2022.
+[43] Y . Tian, R. Cheng, X. Zhang, and Y . Jin, “PlatEMO: A MATLAB
+platform for evolutionary multi-objective optimization,” IEEE Compu-
+tational Intelligence Magazine , vol. 12, pp. 73–87, 11 2017.
+[44] Y . Tian, R. Wang, Y . Zhang, and X. Zhang, “Adaptive population sizing
+for multi-population based constrained multi-objective optimization,”
+Neurocomputing, vol. 621, p. 129296, 2025.
+[45] R. Sun, J. Zou, Y . Liu, S. Yang, and J. Zheng, “A multistage algorithm
+for solving multiobjective optimization problems with multiconstraints,”
+IEEE Transactions on Evolutionary Computation , vol. 27, no. 5, pp.
+1207–1219, 2023.
+[46] L. R. C. de Farias and A. F. R. Araújo, “An inverse
+modeling constrained multi-objective evolutionary algorithm based
+on decomposition,” 2024 IEEE International Conference on Systems,
+Man, and Cybernetics (SMC), pp. 3727–3732, 2024. [Online]. Available:
+https://api.semanticscholar.org/CorpusID:273638540
+[47] X. Ban, J. Liang, K. Qiao, K. Yu, Y . Wang, J. Peng, and B. Qu,
+“A decision variables classification-based evolutionary algorithm for
+constrained multi-objective optimization problems,” IEEE/CAA Journal
+of Automatica Sinica , vol. 12, no. 9, pp. 1830–1849, 2025.
+[48] L. Si, X. Zhang, Y . Zhang, S. Yang, and Y . Tian, “An efficient sampling
+approach to offspring generation for evolutionary large-scale constrained
+multi-objective optimization,” IEEE Transactions on Emerging Topics in
+Computational Intelligence, vol. 9, no. 3, pp. 2080–2092, 2025.
+[49] K. Deb, R. B. Agrawal et al., “Simulated binary crossover for continuous
+search space,” Complex systems, vol. 9, no. 2, pp. 115–148, 1995.
+[50] P. Bosman and D. Thierens, “The balance between proximity and
+diversity in multiobjective evolutionary algorithms,” IEEE Transactions
+on Evolutionary Computation , vol. 7, no. 2, pp. 174–188, 2003.
+[51] E. Zitzler and L. Thiele, “Multiobjective evolutionary algorithms: a com-
+parative case study and the strength pareto approach,”IEEE Transactions
+on Evolutionary Computation , vol. 3, no. 4, pp. 257–271, 1999.
+[52] J. Alcalá-Fdez, L. Sánchez, S. García, M. J. del Jesus, S. Ventura, J. M.
+Garrell, J. Otero, C. Romero, J. Bacardit, V . M. Rivas, J. C. Fernán-
+dez, and F. Herrera, “KEEL: A software tool to assess evolutionary
+algorithms for data mining problems,” Soft Comput., vol. 13, no. 3, pp.
+307–318, 2009.
+[53] B. Kannan and S. N. Kramer, “An augmented lagrange multiplier
+based method for mixed integer discrete continuous optimization and
+its applications to mechanical design,” Journal of mechanical design ,
+vol. 116, no. 2, pp. 405–411, 1994.
+[54] F. Y . Cheng and X. S. Li, “A generalized center method for multiobjec-
+tive optimization,” 1997.
+[55] L. Fan, T. Yoshino, T. Xu, Y . Lin, and H. Liu, “A novel hybrid algo-
+rithm for solving multiobjective optimization problems with engineering
+applications,” Mathematical Problems in Engineering , vol. 2018, no. 1,
+p. 5316379, 2018.
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
+--- Page 15 ---
+15
+[56] G. Guillén-Gosálbez, “A novel milp-based objective reduction method
+for multi-objective optimization: Application to environmental prob-
+lems,” Computers & Chemical Engineering , vol. 35, no. 8, pp. 1469–
+1477, 2011.
+[57] H. Ryoo and N. Sahinidis, “Global optimization of nonconvex nlps and
+minlps with applications in process design,” Computers & Chemical
+Engineering, vol. 19, no. 5, pp. 551–566, 1995.
+[58] G. R. Kocis and I. E. Grossmann, “Global optimization of nonconvex
+mixed-integer nonlinear programming (minlp) problems in process syn-
+thesis,” Industrial & engineering chemistry research , vol. 27, no. 8, pp.
+1407–1421, 1988.
+[59] G. Kocis and I. Grossmann, “A modelling and decomposition strategy for
+the minlp optimization of process flowsheets,” Computers & Chemical
+Engineering, vol. 13, no. 7, pp. 797–819, 1989.
+[60] C. A. Floudas, Nonlinear and Mixed-Integer Optimization: Fundamen-
+tals and Applications . Oxford University Press, 11 1995.
+[61] A. K. Rathore, J. Holtz, and T. Boller, “Synchronous optimal pulsewidth
+modulation for low-switching-frequency control of medium-voltage mul-
+tilevel inverters,” IEEE Transactions on Industrial Electronics , vol. 57,
+no. 7, pp. 2374–2381, 2010.
+[62] A. Edpuganti and A. K. Rathore, “Fundamental switching frequency
+optimal pulsewidth modulation of medium-voltage cascaded seven-level
+inverter,” IEEE Transactions on Industry Applications , vol. 51, no. 4,
+pp. 3485–3492, 2015.
+[63] S. Y . Zeng, L. S. Kang, and L. X. Ding, “An orthogonal multi-objective
+evolutionary algorithm for multi-objective optimization problems with
+constraints,” Evolutionary Computation, vol. 12, no. 1, pp. 77–98, 2004.
+Yubo Wang received the B.Sc. degree in com-
+puter science from South-Central Minzu University,
+Wuhan, China, in 2020. He is currently pursuing the
+Ph.D. degree in computer science with the School of
+Computer Science, China University of Geosciences,
+Wuhan, China.
+His current research interests include evolution-
+ary multiobjective optimization methods, and their
+applications.
+Chengyu Hu received his M.S. degree in automation
+and control from Wuhan University of Technology
+in 2003 and his Ph.D. in automation control from
+Huazhong University of Science and Technology in
+2010. He is currently a professor and vice dean at
+the School of Computer Science, China University
+of Geosciences, Wuhan, China. His research inter-
+ests include evolutionary algorithms, reinforcement
+learning, and cloud computing.
+Xinyi Wu received the B.Sc. degree from Xidian
+University, Xi’an, China, in 2019 and M.Sc. degree
+from New York University. She is currently pursu-
+ing the Ph.D. degree in computer science with the
+School of Computer Science, China University of
+Geosciences, Wuhan, China.
+Her current research interests include evolutionary
+multimodal and multiobjective optimization meth-
+ods, and their applications.
+Tingyu Zhang received the B.Sc. degree in com-
+puter science from Wuhan Institute of Technology,
+Wuhan, China, in 2022. He is currently pursuing the
+Ph.D. degree in computer science with the School of
+Computer Science, China University of Geosciences,
+Wuhan, China.
+His current research interests include evolutionary
+multitask optimization, evolutionary multiobjective
+optimization, and their applications.
+Wenyin Gong (Senior Member, IEEE) received
+the B.Eng., M.Eng., and Ph.D. degrees in com-
+puter science from China University of Geosciences,
+Wuhan, China, in 2004, 2007, and 2010, respec-
+tively.
+He is currently a Professor with School of Com-
+puter Science, China University of Geosciences,
+Wuhan, China. His research interests include evo-
+lutionary algorithms, evolutionary optimization, and
+their applications. He has published over 100 re-
+search papers in journals and international confer-
+ences.
+He served as a referee for over 30 international journals, such as IEEE
+TRANSACTIONS ON EVOLUTIONARY COMPUTATION , IEEE T RANSAC -
+TIONS ON CYBERNETICS , IEEE T RANSACTIONS ON SYSTEMS , M AN, AND
+CYBERNETICS : SYSTEMS , IEEE Computational Intelligence Magazine, ACM
+Transactions on Intelligent Systems and Technology , Information Sciences ,
+European Journal of Operational Research, Applied Soft Computing, Journal
+of Power Sources , etc. Professor Gong currently serves as Associate Editor
+of Swarm and Evolutionary Computation , Expert Systems with Applications ,
+Memetic Computing, etc.
+Xuesong Yan received the B.Eng and M.Eng de-
+grees in computer science from the China University
+of Geosciences, Wuhan, China, in 2000, and 2003,
+respectively, and his Ph.D. degree in computer soft-
+ware and theory from Wuhan University in 2006.
+He is currently a Professor in the School of
+Computer Science, China University of Geosciences,
+Wuhan, China. His research interests include intelli-
+gent optimization, artificial intelligence, and big data
+and its application.
+Liang Gao (Senior Member, IEEE) received his
+B.Sc. degree in mechatronic engineering from Xid-
+ian University, Xi an, China, in 1996, and the Ph.D.
+degree in mechatronic engineering from Huazhong
+University of Science and Technology (HUST),
+Wuhan, China, in 2002.
+He is a Professor of the Department of Industrial
+and Manufacturing Systems Engineering (IMSE),
+the Deputy Director of State Key Laboratory of
+Digital Manufacturing Equipment and Technology
+and Chairman of School of Mechanical Science and
+Engineering, HUST. He was supported by the Program for New Century
+Excellent Talents in University in 2008 and National Science Fund for
+Distinguished Young Scholars of China in 2018. His research interests
+include intelligent optimization algorithms, big data, deep learning with theirs
+application in Design & Manufacturing. He published more than 450 papers
+indexed by SCIE, authored 13 monographs.
+Professor Gao currently serves as co-Editor-in-Chief of IET Collaborative
+Intelligent Manufacturing , Associate Editor of Swarm and Evolutionary
+Computation, Journal of Industrial and Production Engineering , etc.
+This article has been accepted for publication in IEEE Transactions on Evolutionary Computation. This is the author's version which has not been fully edited and 
+content may change prior to final publication. Citation information: DOI 10.1109/TEVC.2026.3700184
+© 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted,
+but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore.  Restrictions apply. 
