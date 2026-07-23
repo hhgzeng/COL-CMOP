@@ -7,6 +7,7 @@ Soft Computing, 2019, 23: 12491-12510.
 """
 
 from __future__ import annotations
+from typing import Any
 
 import numpy as np
 from pymoo.core.problem import Problem
@@ -34,7 +35,7 @@ class LIRCMOP1(LIRCMOP):
     def __init__(self, n_var: int = 30, **kwargs) -> None:
         super().__init__(n_var=n_var, n_obj=2, n_ieq_constr=2, **kwargs)
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         X1 = X[:, 0:1]
         x_odd = X[:, 2::2]
         x_even = X[:, 1::2]
@@ -51,7 +52,7 @@ class LIRCMOP1(LIRCMOP):
         out["F"] = np.hstack([f1, f2])
         out["G"] = np.hstack([c1, c2])
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         f1 = x1 + 0.5
         f2 = 1.0 - x1**2 + 0.5
@@ -64,7 +65,7 @@ class LIRCMOP2(LIRCMOP):
     def __init__(self, n_var: int = 30, **kwargs) -> None:
         super().__init__(n_var=n_var, n_obj=2, n_ieq_constr=2, **kwargs)
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         X1 = X[:, 0:1]
         x_odd = X[:, 2::2]
         x_even = X[:, 1::2]
@@ -81,7 +82,7 @@ class LIRCMOP2(LIRCMOP):
         out["F"] = np.hstack([f1, f2])
         out["G"] = np.hstack([c1, c2])
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         f1 = x1 + 0.5
         f2 = 1.0 - np.sqrt(x1) + 0.5
@@ -94,7 +95,7 @@ class LIRCMOP3(LIRCMOP):
     def __init__(self, n_var: int = 30, **kwargs) -> None:
         super().__init__(n_var=n_var, n_obj=2, n_ieq_constr=3, **kwargs)
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         X1 = X[:, 0:1]
         x_odd = X[:, 2::2]
         x_even = X[:, 1::2]
@@ -112,7 +113,7 @@ class LIRCMOP3(LIRCMOP):
         out["F"] = np.hstack([f1, f2])
         out["G"] = np.hstack([c1, c2, c3])
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         mask = np.sin(20.0 * np.pi * x1) >= 0.5
         x1 = x1[mask]
@@ -127,7 +128,7 @@ class LIRCMOP4(LIRCMOP):
     def __init__(self, n_var: int = 30, **kwargs) -> None:
         super().__init__(n_var=n_var, n_obj=2, n_ieq_constr=3, **kwargs)
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         X1 = X[:, 0:1]
         x_odd = X[:, 2::2]
         x_even = X[:, 1::2]
@@ -145,7 +146,7 @@ class LIRCMOP4(LIRCMOP):
         out["F"] = np.hstack([f1, f2])
         out["G"] = np.hstack([c1, c2, c3])
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         mask = np.sin(20.0 * np.pi * x1) >= 0.5
         x1 = x1[mask]
@@ -190,7 +191,7 @@ class LIRCMOP5(LIRCMOP):
             c[:, k] = r - term1 - term2
         return c
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         gx = 0.7057
         f1 = X[:, 0:1] + 10.0 * sum1 + gx
@@ -200,7 +201,7 @@ class LIRCMOP5(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         f1 = x1 + 0.7057
         f2 = 1.0 - np.sqrt(x1) + 0.7057
@@ -231,7 +232,7 @@ class LIRCMOP6(LIRCMOP):
             c[:, k] = r - term1 - term2
         return c
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         gx = 0.7057
         f1 = X[:, 0:1] + 10.0 * sum1 + gx
@@ -241,7 +242,7 @@ class LIRCMOP6(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         f1 = x1 + 0.7057
         f2 = 1.0 - x1**2 + 0.7057
@@ -272,7 +273,7 @@ class LIRCMOP7(LIRCMOP):
             c[:, k] = r - term1 - term2
         return c
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         gx = 0.7057
         f1 = X[:, 0:1] + 10.0 * sum1 + gx
@@ -282,7 +283,7 @@ class LIRCMOP7(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         r1 = x1 + 0.7057
         r2 = 1.0 - np.sqrt(x1) + 0.7057
@@ -320,7 +321,7 @@ class LIRCMOP8(LIRCMOP):
             c[:, k] = r - term1 - term2
         return c
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         gx = 0.7057
         f1 = X[:, 0:1] + 10.0 * sum1 + gx
@@ -330,7 +331,7 @@ class LIRCMOP8(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         r1 = x1 + 0.7057
         r2 = 1.0 - np.sqrt(x1) + 0.7057
@@ -364,7 +365,7 @@ class LIRCMOP9(LIRCMOP):
              np.sin(4.0 * np.pi * (F[:, 0] * np.cos(alpha) - F[:, 1] * np.sin(alpha)))
         return np.column_stack([c1, c2])
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         f1 = 1.7057 * X[:, 0:1] * (10.0 * sum1 + 1.0)
         f2 = 1.7057 * (1.0 - X[:, 0:1] ** 2) * (10.0 * sum2 + 1.0)
@@ -373,14 +374,14 @@ class LIRCMOP9(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         r1 = x1 * 1.7057
         r2 = (1.0 - x1**2) * 1.7057
         R = np.column_stack([r1, r2])
         con = self._constraint(R)
         feasible = np.all(con <= 0, axis=1)
-        R = R[feasible]
+        R = R[feasible]  # pyright: ignore[reportConstantRedefinition]
         return np.vstack([R, [0.0, 2.182], [1.856, 0.0]])
 
 
@@ -401,7 +402,7 @@ class LIRCMOP10(LIRCMOP):
              np.sin(4.0 * np.pi * (F[:, 0] * np.cos(alpha) - F[:, 1] * np.sin(alpha)))
         return np.column_stack([c1, c2])
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         f1 = 1.7057 * X[:, 0:1] * (10.0 * sum1 + 1.0)
         f2 = 1.7057 * (1.0 - np.sqrt(X[:, 0:1])) * (10.0 * sum2 + 1.0)
@@ -410,14 +411,14 @@ class LIRCMOP10(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         x1 = np.linspace(0, 1, n_points)
         r1 = x1 * 1.7057
         r2 = (1.0 - np.sqrt(x1)) * 1.7057
         R = np.column_stack([r1, r2])
         con = self._constraint(R)
         feasible = np.all(con <= 0, axis=1)
-        R = R[feasible]
+        R = R[feasible]  # pyright: ignore[reportConstantRedefinition]
         return np.vstack([R, [1.747, 0.0]])
 
 
@@ -438,7 +439,7 @@ class LIRCMOP11(LIRCMOP):
              np.sin(4.0 * np.pi * (F[:, 0] * np.cos(alpha) - F[:, 1] * np.sin(alpha)))
         return np.column_stack([c1, c2])
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         f1 = 1.7057 * X[:, 0:1] * (10.0 * sum1 + 1.0)
         f2 = 1.7057 * (1.0 - np.sqrt(X[:, 0:1])) * (10.0 * sum2 + 1.0)
@@ -447,7 +448,7 @@ class LIRCMOP11(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         return np.array([
             [1.3965, 0.1591],
             [1.0430, 0.5127],
@@ -476,7 +477,7 @@ class LIRCMOP12(LIRCMOP):
              np.sin(4.0 * np.pi * (F[:, 0] * np.cos(alpha) - F[:, 1] * np.sin(alpha)))
         return np.column_stack([c1, c2])
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1, sum2 = _calc_lircmop_sums(X)
         f1 = 1.7057 * X[:, 0:1] * (10.0 * sum1 + 1.0)
         f2 = 1.7057 * (1.0 - X[:, 0:1] ** 2) * (10.0 * sum2 + 1.0)
@@ -485,7 +486,7 @@ class LIRCMOP12(LIRCMOP):
         out["F"] = F
         out["G"] = self._constraint(F)
 
-    def _calc_pareto_front(self, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         return np.array([
             [1.6794, 0.4419],
             [1.3258, 0.7955],
@@ -504,7 +505,7 @@ class LIRCMOP13(LIRCMOP):
     def __init__(self, n_var: int = 30, **kwargs) -> None:
         super().__init__(n_var=n_var, n_obj=3, n_ieq_constr=2, **kwargs)
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1 = np.sum(10.0 * (X[:, 2:] - 0.5) ** 2, axis=1, keepdims=True)
 
         f1 = (1.7057 + sum1) * np.cos(0.5 * np.pi * X[:, 0:1]) * np.cos(0.5 * np.pi * X[:, 1:2])
@@ -520,7 +521,7 @@ class LIRCMOP13(LIRCMOP):
         out["F"] = F
         out["G"] = G
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
             ref_dirs = get_reference_directions("energy", 3, n_points=n_points)
         except Exception:
@@ -535,7 +536,7 @@ class LIRCMOP14(LIRCMOP):
     def __init__(self, n_var: int = 30, **kwargs) -> None:
         super().__init__(n_var=n_var, n_obj=3, n_ieq_constr=3, **kwargs)
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:
         sum1 = np.sum(10.0 * (X[:, 2:] - 0.5) ** 2, axis=1, keepdims=True)
 
         f1 = (1.7057 + sum1) * np.cos(0.5 * np.pi * X[:, 0:1]) * np.cos(0.5 * np.pi * X[:, 1:2])
@@ -552,7 +553,7 @@ class LIRCMOP14(LIRCMOP):
         out["F"] = F
         out["G"] = G
 
-    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:
+    def _calc_pareto_front(self, n_points: int = 100, *args, **kwargs) -> np.ndarray:  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
             ref_dirs = get_reference_directions("energy", 3, n_points=n_points)
         except Exception:

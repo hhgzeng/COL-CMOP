@@ -7,7 +7,6 @@ from core.schema import Population
 
 def env_cdp_selection(pop: Population, target_n: int) -> Population:
     """基于 CDP 规则的选择 (对应 EnvCDP.m)。"""
-    n = len(pop.x)
     cv = pop.cv
     feas_mask = cv <= 1e-12
 

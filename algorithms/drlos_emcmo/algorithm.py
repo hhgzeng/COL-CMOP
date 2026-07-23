@@ -50,14 +50,14 @@ class DRLOSEMCMO:
         cv_concat = np.concatenate([p.cv for p in pops if len(p.cv) > 0], axis=0)
         total_len = len(x_concat)
         if all(p.g is not None for p in pops if len(p.x) > 0):
-            g_concat = np.concatenate([p.g for p in pops if len(p.x) > 0], axis=0)
+            g_concat = np.concatenate([p.g for p in pops if len(p.x) > 0 and p.g is not None], axis=0)
             if len(g_concat) != total_len:
                 g_concat = None
         else:
             g_concat = None
 
         if all(p.h is not None for p in pops if len(p.x) > 0):
-            h_concat = np.concatenate([p.h for p in pops if len(p.x) > 0], axis=0)
+            h_concat = np.concatenate([p.h for p in pops if len(p.x) > 0 and p.h is not None], axis=0)
             if len(h_concat) != total_len:
                 h_concat = None
         else:

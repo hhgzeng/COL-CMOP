@@ -35,6 +35,7 @@ class TestPymooProblemAdapter(unittest.TestCase):
         # 校验输出数据维度
         self.assertEqual(res.f.shape, (10, adapter.n_obj))
         self.assertIsNotNone(res.g)
+        assert res.g is not None
         self.assertEqual(res.g.shape, (10, 1))  # C1DTLZ1 有 1 个不等式约束
         self.assertEqual(res.cv.shape, (10,))
         self.assertEqual(adapter.eval_count, 10)
@@ -60,6 +61,7 @@ class TestPymooProblemAdapter(unittest.TestCase):
         x = np.ones((2, adapter.n_var)) * 0.5
         res = adapter.evaluate(x)
 
+        assert res.g is not None
         expected_cv = np.maximum(res.g, 0.0).sum(axis=1)
         np.testing.assert_allclose(res.cv, expected_cv)
 

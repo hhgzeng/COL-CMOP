@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Type
+from typing import Any, Callable, Type
 
 from algorithms import (
     APSEA,
@@ -54,7 +54,7 @@ from problems.lircmop import (
     LIRCMOP14,
 )
 
-ALGORITHM_REGISTRY: dict[str, Type] = {
+ALGORITHM_REGISTRY: dict[str, Type[Any]] = {
     "DSOCOL": DSOCOL,
     "APSEA": APSEA,
     "C3M": C3M,
@@ -67,7 +67,7 @@ ALGORITHM_REGISTRY: dict[str, Type] = {
     "POCEA": POCEA,
 }
 
-PROBLEM_REGISTRY: dict[str, Type] = {
+PROBLEM_REGISTRY: dict[str, Callable[..., Any]] = {
     # C-DTLZ Benchmarks
     "C1DTLZ1": C1DTLZ1,
     "C1DTLZ3": C1DTLZ3,

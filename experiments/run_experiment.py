@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import time
 from pathlib import Path
 
@@ -42,7 +41,7 @@ def run_single_run(
     max_evals: int = 100000,
     population_size: int = 100,
     save_dir: str | Path = "results",
-) -> dict[str, float]:
+) -> dict[str, float | int | str]:
     """执行单个 Seed 的算法运行，记录耗时与指标并落盘 NPZ 文件。"""
     save_dir = Path(save_dir) / algo_name / prob_name
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -101,14 +100,14 @@ def run_single_run(
 
 def run_batch_experiment(config: ExperimentConfig) -> pd.DataFrame:
     """按配置进行多算法、多问题、N 次独立重复实验并生成汇总 CSV/NPZ 报告。"""
-    all_metrics: list[dict[str, float]] = []
+    all_metrics: list[dict[str, float | int | str]] = []
 
-    print(f"==================================================")
+    print("==================================================")
     print(f"开始执行实验批次: 算法={config.algorithms}, 问题={config.problems}")
     print(
         f"独立重复次数: {config.n_runs}, 最大 FE: {config.max_evals}, 种群规模: {config.population_size}"
     )
-    print(f"==================================================")
+    print("==================================================")
 
     for prob_name in config.problems:
         for algo_name in config.algorithms:
@@ -141,7 +140,10 @@ def run_batch_experiment(config: ExperimentConfig) -> pd.DataFrame:
 
     # 导出统计汇总 CSV (mean ± std)
     summary_rows = []
-    for (algo, prob), group in df_detail.groupby(["algorithm", "problem"]):
+    grouped = df_detail.groupby(["algorithm", "problem"])
+    for key, group in grouped:
+        assert isinstance(key, tuple)
+        algo, prob = key
         summary_rows.append(
             {
                 "Algorithm": algo,

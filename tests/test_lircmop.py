@@ -26,6 +26,9 @@ from problems.lircmop import (
 class TestLIRCMOPProblems(unittest.TestCase):
     """测试 LIR-CMOP1 到 LIR-CMOP14 问题维度、目标值、约束值及 PF 计算。"""
 
+    problems: list[type] = []
+    expected_specs: list[tuple[int, int]] = []
+
     def setUp(self):
         self.problems = [
             LIRCMOP1,
@@ -74,6 +77,7 @@ class TestLIRCMOPProblems(unittest.TestCase):
 
                 x = np.full((5, 30), 0.5)
                 res = adapter.evaluate(x)
+                assert res.g is not None
 
                 self.assertEqual(res.f.shape, (5, exp_n_obj))
                 self.assertEqual(res.g.shape, (5, exp_n_con))
@@ -86,6 +90,7 @@ class TestLIRCMOPProblems(unittest.TestCase):
         adapter = PymooProblemAdapter(prob)
         x = np.full((1, 30), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         x1 = 0.5
         sin_val = np.sin(0.5 * np.pi * x1)
@@ -113,6 +118,7 @@ class TestLIRCMOPProblems(unittest.TestCase):
         adapter = PymooProblemAdapter(prob)
         x = np.full((1, 30), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         # x3..x30 均为 0.5，sum1 = 0
         f1 = 1.7057 * np.cos(0.25 * np.pi) * np.cos(0.25 * np.pi)
@@ -137,6 +143,7 @@ class TestLIRCMOPProblems(unittest.TestCase):
                 prob = cls(n_var=30)
                 pf = prob.pareto_front()
                 self.assertIsNotNone(pf)
+                assert pf is not None and isinstance(pf, np.ndarray)
                 self.assertGreater(len(pf), 0)
                 self.assertEqual(pf.shape[1], prob.n_obj)
                 self.assertFalse(np.isnan(pf).any())

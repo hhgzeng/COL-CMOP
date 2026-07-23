@@ -89,6 +89,7 @@ def operator_ga(
             offspring_x[i + 1] = c2
 
     # 2. 多项式变异 (PM)
+    assert pm is not None
     mask = rng.random((n, d)) < pm
     if np.any(mask):
         u = rng.random((n, d))
@@ -126,6 +127,7 @@ def polynomial_mutation(
     if pm is None:
         pm = 1.0 / d
 
+    assert pm is not None
     mask = rng.random((n, d)) < pm
     if not np.any(mask):
         return x
@@ -196,8 +198,8 @@ def uniform_point(n: int, m: int) -> tuple[Array, int]:
 
     H = 1
     while math.comb(H + m - 1, m - 1) <= n:
-        H += 1
-    H = max(1, H - 1)
+        H += 1  # pyright: ignore[reportConstantRedefinition]
+    H = max(1, H - 1)  # pyright: ignore[reportConstantRedefinition]
 
     def _generate_recursive(m_rem: int, sum_rem: int):
         if m_rem == 1:

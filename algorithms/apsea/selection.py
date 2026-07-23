@@ -100,6 +100,7 @@ def environmental_selection_epsilon(
     return_fits: list[Array] = []
 
     if f_pop is None or len(f_pop.x) == 0:
+        assert if_pop is not None
         if_fit = cal_fitness(if_pop.f, if_pop.g)
         next2 = if_fit < 1.0
         if next2.sum() <= target_n:

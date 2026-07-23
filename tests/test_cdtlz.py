@@ -19,6 +19,7 @@ class TestCDTLZProblems(unittest.TestCase):
         # 固定输入点：x = 0.5 全向量
         x = np.full((1, 7), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         # 当 x[M-1:] = 0.5 时，g(x) = 0，DTLZ1 目标值分布在 [0, 0.5]
         self.assertEqual(res.f.shape, (1, 3))
@@ -39,6 +40,7 @@ class TestCDTLZProblems(unittest.TestCase):
 
         x = np.full((1, 12), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         self.assertEqual(res.f.shape, (1, 3))
         self.assertEqual(res.g.shape, (1, 1))
@@ -59,6 +61,7 @@ class TestCDTLZProblems(unittest.TestCase):
 
         x = np.full((1, 12), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         self.assertEqual(res.f.shape, (1, 3))
         self.assertEqual(res.g.shape, (1, 1))
@@ -73,6 +76,7 @@ class TestCDTLZProblems(unittest.TestCase):
 
         x = np.full((1, 7), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         self.assertEqual(res.f.shape, (1, 3))
         self.assertEqual(res.g.shape, (1, 3))  # 3 个线性约束
@@ -87,6 +91,7 @@ class TestCDTLZProblems(unittest.TestCase):
 
         x = np.full((1, 12), 0.5)
         res = adapter.evaluate(x)
+        assert res.g is not None
 
         self.assertEqual(res.f.shape, (1, 3))
         self.assertEqual(res.g.shape, (1, 3))  # 3 个球面约束

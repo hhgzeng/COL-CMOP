@@ -17,7 +17,6 @@ from __future__ import annotations
 from math import comb
 import numpy as np
 
-from core.operators import polynomial_mutation
 from core.schema import Array
 
 

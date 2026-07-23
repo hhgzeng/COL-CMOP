@@ -15,9 +15,9 @@ class EvaluationResult:
     """标准评估结果，包含目标函数值、约束矩阵与约束违反度。"""
 
     f: Array
+    cv: Array
     g: Array | None = None
     h: Array | None = None
-    cv: Array = None  # type: ignore[assignment]
 
 
 class CMOP(Protocol):

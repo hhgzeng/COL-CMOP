@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from core.operators import polynomial_mutation
@@ -71,16 +73,18 @@ def algorithm2_offspring_generation(
     """
     n = len(pop.x)
     order = rng.permutation(n)
-    winners, losers = [], []
+    winners: list[int] = []
+    losers: list[int] = []
     for a, b in order.reshape(-1, 2):
         if fitness[a] < fitness[b]:
-            winners.append(a)
-            losers.append(b)
+            winners.append(int(a))
+            losers.append(int(b))
         else:
-            winners.append(b)
-            losers.append(a)
+            winners.append(int(b))
+            losers.append(int(a))
 
-    w, l = np.asarray(winners), np.asarray(losers)
+    w = np.asarray(winners, dtype=int)
+    l = np.asarray(losers, dtype=int)  # noqa: E741
     x, v = pop.x.copy(), velocity.copy()
 
     # 调用公式 (4)
@@ -174,7 +178,7 @@ def algorithm3_collaborative_orthogonal_learning(
 # Algorithm 4: Environmental Selection (环境选择流程)
 # ===========================================================================
 
-def algorithm4_spea2_truncate(f: Array, indices: list[int], target: int) -> list[int]:
+def algorithm4_spea2_truncate(f: Array, indices: list[Any], target: int) -> list[int]:
     """Algorithm 4 依赖的 SPEA2 字典序拥挤度截断辅助过程。"""
     indices = indices.copy()
     while len(indices) > target:
@@ -323,7 +327,7 @@ class DSOCOL:
 
         t = 0
         total_generations = max(1, problem.max_evals // (2 * self.n))
-        tc = max(1, total_generations // 3)
+        tc = max(1, total_generations // 3)  # noqa
 
         # Line 7: while t <= T (在此通过 problem.eval_count < problem.max_evals 精确驱动)
         while problem.eval_count < problem.max_evals:

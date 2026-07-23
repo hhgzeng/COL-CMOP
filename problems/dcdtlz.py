@@ -1,8 +1,11 @@
 """Degenerate constrained DTLZ test problems (DC1DTLZ1, DC1DTLZ3, DC2DTLZ1, DC2DTLZ3, DC3DTLZ1, DC3DTLZ3)."""
 
-import pymoo.gradient.toolbox as anp
+from typing import Any
 
+import pymoo.gradient.toolbox as _anp_mod
 from pymoo.problems.many.dtlz import DTLZ1, DTLZ3
+
+anp: Any = _anp_mod
 
 
 def constraint_dc1(X, a: int = 5, b: float = 0.95):

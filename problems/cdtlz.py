@@ -1,9 +1,12 @@
 """Constrained DTLZ test problems (C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ1, C3DTLZ4)."""
 
-import pymoo.gradient.toolbox as anp
-import numpy as np
+from typing import Any
 
+import numpy as np
+import pymoo.gradient.toolbox as _anp_mod
 from pymoo.problems.many.dtlz import DTLZ1, DTLZ2, DTLZ3, DTLZ4, get_ref_dirs
+
+anp: Any = _anp_mod
 
 
 class C1DTLZ1(DTLZ1):
@@ -222,7 +225,7 @@ class C3DTLZ4(DTLZ4):
         a = np.sqrt(np.sum(F**2, 1) - 3 / 4 * np.max(F**2, axis=1))
         a = np.expand_dims(a, axis=1)
         a = np.tile(a, [1, ref_dirs.shape[1]])
-        F = F / a
+        F = F / a  # pyright: ignore[reportConstantRedefinition]
 
         return F
 

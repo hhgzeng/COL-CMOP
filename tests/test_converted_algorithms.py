@@ -18,6 +18,8 @@ from problems.cdtlz import C1DTLZ1
 
 
 class TestConvertedAlgorithms(unittest.TestCase):
+    max_evals: int = 0
+    pop_size: int = 0
 
     def setUp(self):
         self.max_evals = 300

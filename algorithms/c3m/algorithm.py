@@ -2,7 +2,7 @@
 
 对应 Sun 等人 2023 年 IEEE TEVC 论文及 PlatEMO 源码 C3M.m。
 """
-from __future__ import annotations
+from typing import Any
 
 import numpy as np
 
@@ -53,7 +53,7 @@ class C3M:
         fit = cal_fitness(pop.f, pop.g, processcon, totalcon)
         arch = pop
 
-        pops_sub: list[dict] = []
+        pops_sub: list[dict[str, Any]] = []
         for i in range(1, totalcon + 1):
             pops_sub.append({
                 "pop": pop,

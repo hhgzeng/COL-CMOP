@@ -1,11 +1,13 @@
 """Multi-objective DASCMOP problem variants."""
 
+from typing import Any
+
 import numpy as np
 
 from pymoo.core.problem import Problem
 from pymoo.util.remote import Remote
 
-DIFFICULTIES: list = [
+DIFFICULTIES: list[tuple[float, float, float]] = [
     (0.25, 0.0, 0.0),
     (0.0, 0.25, 0.0),
     (0.0, 0.0, 0.25),
@@ -26,7 +28,7 @@ DIFFICULTIES: list = [
 
 
 class DASCMOP(Problem):
-    def __init__(self, n_obj: int, n_ieq_constr: int, difficulty: int | tuple, **kwargs) -> None:  # noqa: PYI041
+    def __init__(self, n_obj: int, n_ieq_constr: int, difficulty: int | tuple[float, ...], **kwargs) -> None:  # noqa: PYI041
         super().__init__(
             n_var=30,
             n_obj=n_obj,
@@ -65,7 +67,7 @@ class DASCMOP(Problem):
         contrib = (X[:, self.n_obj - 1 :] - np.cos(0.25 * j / self.n_var * np.pi * (X[:, 0:1] + X[:, 1:2]))) ** 2
         return contrib.sum(axis=1)[:, None]
 
-    def _calc_pareto_front(self, *args, **kwargs):  # noqa: ARG002
+    def _calc_pareto_front(self, *args, **kwargs):  # type: ignore  # pyright: ignore[reportIncompatibleMethodOverride]
         return Remote.get_instance().load(
             "pymoo",
             "pf",
@@ -75,7 +77,7 @@ class DASCMOP(Problem):
 
 
 class DASCMOP1(DASCMOP):
-    def __init__(self, difficulty: int | tuple, **kwargs) -> None:  # noqa: PYI041
+    def __init__(self, difficulty: int | tuple[float, ...] = 1, **kwargs) -> None:  # noqa: PYI041
         super().__init__(2, 11, difficulty)
 
     def constraints(self, X: np.ndarray, f0: np.ndarray, f1: np.ndarray, g: np.ndarray) -> np.ndarray:
@@ -111,7 +113,7 @@ class DASCMOP1(DASCMOP):
 
         return -1 * c
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g1(X)
 
         f0 = X[:, 0:1] + g
@@ -122,7 +124,7 @@ class DASCMOP1(DASCMOP):
 
 
 class DASCMOP2(DASCMOP1):
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g1(X)
 
         f0 = X[:, 0:1] + g
@@ -133,7 +135,7 @@ class DASCMOP2(DASCMOP1):
 
 
 class DASCMOP3(DASCMOP1):
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g1(X)
 
         f0 = X[:, 0:1] + g
@@ -144,7 +146,7 @@ class DASCMOP3(DASCMOP1):
 
 
 class DASCMOP4(DASCMOP1):
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g2(X)
 
         f0 = X[:, 0:1] + g
@@ -155,7 +157,7 @@ class DASCMOP4(DASCMOP1):
 
 
 class DASCMOP5(DASCMOP1):
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g2(X)
 
         f0 = X[:, 0:1] + g
@@ -166,7 +168,7 @@ class DASCMOP5(DASCMOP1):
 
 
 class DASCMOP6(DASCMOP1):
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g2(X)
 
         f0 = X[:, 0:1] + g
@@ -177,8 +179,8 @@ class DASCMOP6(DASCMOP1):
 
 
 class DASCMOP7(DASCMOP):
-    def __init__(self, difficulty_factors: int | tuple, **kwargs) -> None:  # noqa: PYI041
-        super().__init__(3, 7, difficulty_factors)
+    def __init__(self, difficulty: int | tuple[float, ...] = 1, **kwargs) -> None:  # noqa: PYI041
+        super().__init__(3, 7, difficulty)
 
     def constraints(
         self,
@@ -213,7 +215,7 @@ class DASCMOP7(DASCMOP):
         c[:, 3:] = (f0 - x_k) ** 2 + (f1 - y_k) ** 2 + (f2 - z_k) ** 2 - r**2
         return -1 * c
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g2(X)
 
         f0 = X[:, 0:1] * X[:, 1:2] + g
@@ -231,7 +233,7 @@ class DASCMOP8(DASCMOP7):
         f2 = np.sin(0.5 * np.pi * X[:, 0:1]) + g
         return np.column_stack([f0, f1, f2])
 
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g2(X)
         F = self.objectives(X, g)
         out["F"] = F
@@ -239,7 +241,7 @@ class DASCMOP8(DASCMOP7):
 
 
 class DASCMOP9(DASCMOP8):
-    def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
+    def _evaluate(self, X: np.ndarray, out: dict[str, Any], *args, **kwargs) -> None:  # type: ignore[override]  # noqa: ARG002
         g = self.g3(X)
         F = self.objectives(X, g)
         out["F"] = F

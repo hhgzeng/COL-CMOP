@@ -12,6 +12,7 @@ def kmeans_clusters(objs: Array, k: int, rng: np.random.Generator) -> np.ndarray
         return np.arange(n)
     init_idx = rng.choice(n, size=k, replace=False)
     centers = objs[init_idx].copy()
+    labels = np.zeros(n, dtype=int)
 
     for _ in range(15):
         dist = np.linalg.norm(objs[:, None, :] - centers[None, :, :], axis=2)

@@ -1,14 +1,13 @@
 """评价指标模块，包含 IGD (反向世代距离) 与 HV (超体积) 计算。"""
 from __future__ import annotations
 
-import numpy as np
 from pymoo.indicators.hv import HV
 from pymoo.indicators.igd import IGD
 
 from core.schema import Array
 
 
-def calculate_igd(points: Array, ref_front: Array) -> float:
+def calculate_igd(points: Array | None, ref_front: Array) -> float:
     """计算非支配解集 points 相对于参考 Pareto 前沿 ref_front 的 IGD 值。
 
     Args:
@@ -21,10 +20,11 @@ def calculate_igd(points: Array, ref_front: Array) -> float:
     if points is None or len(points) == 0:
         return float("nan")
     indicator = IGD(ref_front)
-    return float(indicator(points))
+    val = indicator(points)
+    return float("nan") if val is None else float(val)
 
 
-def calculate_hv(points: Array, ref_point: Array) -> float:
+def calculate_hv(points: Array | None, ref_point: Array) -> float:
     """计算非支配解集 points 相对于参考点 ref_point 的超体积 HV。
 
     Args:
@@ -37,4 +37,5 @@ def calculate_hv(points: Array, ref_point: Array) -> float:
     if points is None or len(points) == 0:
         return 0.0
     indicator = HV(ref_point=ref_point)
-    return float(indicator(points))
+    val = indicator(points)
+    return 0.0 if val is None else float(val)
