@@ -1,4 +1,5 @@
 """pymoo 问题的统一适配器模块。"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -66,12 +67,19 @@ class PymooProblemAdapter:
             h = out[2] if len(out) > 2 else None
         elif isinstance(out, dict):
             f = np.asarray(out["F"], dtype=float)
-            g = np.asarray(out["G"], dtype=float).reshape(n_samples, -1) if "G" in out and out["G"] is not None and out["G"].size > 0 else None
-            h = np.asarray(out["H"], dtype=float).reshape(n_samples, -1) if "H" in out and out["H"] is not None and out["H"].size > 0 else None
+            g = (
+                np.asarray(out["G"], dtype=float).reshape(n_samples, -1)
+                if "G" in out and out["G"] is not None and out["G"].size > 0
+                else None
+            )
+            h = (
+                np.asarray(out["H"], dtype=float).reshape(n_samples, -1)
+                if "H" in out and out["H"] is not None and out["H"].size > 0
+                else None
+            )
         else:
             f = np.asarray(out, dtype=float)
             g, h = None, None
-
 
         # 计算约束违反度 CV
         cv = np.zeros(n_samples, dtype=float)

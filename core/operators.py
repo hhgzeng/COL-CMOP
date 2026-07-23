@@ -22,10 +22,12 @@ def tournament_selection(k: int, n_select: int, fitness: Array, rng: np.random.G
 
     n = len(fitness)
     selected = np.empty(n_select, dtype=int)
+    replace_choice = n < k
     for i in range(n_select):
-        competitors = rng.choice(n, size=k, replace=False)
+        competitors = rng.choice(n, size=k, replace=replace_choice)
         selected[i] = competitors[np.argmin(fitness[competitors])]
     return selected
+
 
 
 def operator_ga(
@@ -148,4 +150,64 @@ def polynomial_mutation(
     span = np.broadcast_to(upper_2d - lower_2d, x.shape)
     x_mut[mask] = x[mask] + (delta_q * span)[mask]
     return np.clip(x_mut, lower_2d, upper_2d)
+
+
+def operator_de(
+    x: Array,
+    p1: Array,
+    p2: Array,
+    lower: Array,
+    upper: Array,
+    rng: np.random.Generator | None = None,
+    CR: float = 1.0,
+    F: float = 0.5,
+    eta_m: float = 20.0,
+    pm: float | None = None,
+) -> Array:
+    """通用 Differential Evolution (DE/rand/1/bin) 算子 + 多项式变异。"""
+    if rng is None:
+        rng = np.random.default_rng()
+
+    n, d = x.shape
+    if pm is None:
+        pm = 1.0 / d
+
+    lower_2d = lower[None, :]
+    upper_2d = upper[None, :]
+
+    mask = rng.random((n, d)) < CR
+    j_rand = rng.integers(0, d, size=n)
+    for i in range(n):
+        mask[i, j_rand[i]] = True
+
+    v = x + F * (p1 - p2)
+    offspring_x = np.where(mask, v, x)
+    offspring_x = np.clip(offspring_x, lower_2d, upper_2d)
+
+    return polynomial_mutation(offspring_x, lower, upper, rng, eta_m=eta_m, pm=pm)
+
+
+def uniform_point(n: int, m: int) -> tuple[Array, int]:
+    """生成 M 维单纯形上约 N 个均匀分布的参考点/权重向量 (Das & Dennis 方法)。"""
+    import math
+
+    if m == 1:
+        return np.ones((1, 1), dtype=float), 1
+
+    H = 1
+    while math.comb(H + m - 1, m - 1) <= n:
+        H += 1
+    H = max(1, H - 1)
+
+    def _generate_recursive(m_rem: int, sum_rem: int):
+        if m_rem == 1:
+            yield (sum_rem,)
+        else:
+            for i in range(sum_rem + 1):
+                for sub in _generate_recursive(m_rem - 1, sum_rem - i):
+                    yield (i,) + sub
+
+    w = np.array(list(_generate_recursive(m, H)), dtype=float) / float(H)
+    return w, len(w)
+
 

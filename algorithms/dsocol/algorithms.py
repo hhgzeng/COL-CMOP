@@ -357,7 +357,8 @@ class DSOCOL:
 
             # Line 17-18: 按照公式 (7) 动态更新 ε
             ratio = float(np.mean(s1.cv <= 1e-12))
-            epsilon = update_epsilon(ratio, self.alpha, t, tc, epsilon_max)
+            t_max = max(1.0, problem.max_evals / (2.0 * self.n))
+            epsilon = update_epsilon(epsilon, ratio, self.alpha, t_max, epsilon_max, self.rng)
 
             history["fe"].append(float(problem.eval_count))
             history["epsilon"].append(epsilon)

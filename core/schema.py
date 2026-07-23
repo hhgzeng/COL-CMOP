@@ -1,4 +1,5 @@
 """约束多目标优化问题和种群的数据类型定义。"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,8 +27,12 @@ class CMOP(Protocol):
     upper: Array
     n_var: int
     n_obj: int
-    eval_count: int
     max_evals: int
+
+    @property
+    def eval_count(self) -> int:
+        """当前累计函数评估次数 (FE)。"""
+        ...
 
     def evaluate(self, x: Array) -> EvaluationResult:
         """评估决策变量矩阵 x 并返回 EvaluationResult，同时累加评估次数。"""
@@ -53,4 +58,3 @@ class Result:
     feasible_nondominated: Population
     eval_count: int
     history: dict[str, list[float]]
-

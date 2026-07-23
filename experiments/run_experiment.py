@@ -160,10 +160,10 @@ def run_batch_experiment(config: ExperimentConfig) -> pd.DataFrame:
     df_summary = pd.DataFrame(summary_rows)
     df_summary.to_csv(out_dir / "summary_metrics.csv", index=False)
 
-    print(f"\n==================================================")
+    print("\n==================================================")
     print(f"实验全部完成！统计汇总已存入 {out_dir / 'summary_metrics.csv'}")
     print(df_summary.to_string(index=False))
-    print(f"==================================================")
+    print("==================================================")
 
     return df_summary
 

@@ -195,10 +195,20 @@ def compute_col_orthogonal_direction(direction: Array, rng: np.random.Generator)
 # ---------------------------------------------------------------------------
 
 def update_epsilon(
-    ratio: float, alpha: float, t: int, tc: int, epsilon_max: float
+    epsilon: float,
+    ratio: float,
+    alpha: float,
+    t_max: float,
+    epsilon_max: float,
+    rng: np.random.Generator,
 ) -> float:
-    """公式 (7): 根据主群体可行率 ratio 动态更新 ε 边界。"""
+    """论文公式 (7): 根据主群体可行率 ratio 动态更新 ε 边界。
+
+    ε(t+1) = (1 - σ) * ε(t), if fr <= α
+    ε(t+1) = ε_max, otherwise
+    """
     if ratio <= alpha:
-        progress = min(1.0, t / tc)
-        return float(epsilon_max * ((1.0 - progress) ** 2))
+        sigma_min = float(np.clip(1.0 - (t_max / 3.0) / (epsilon_max + 1e-15), 0.0, 0.95))
+        sigma = rng.uniform(sigma_min, 1.0)
+        return float((1.0 - sigma) * epsilon)
     return float(epsilon_max)
