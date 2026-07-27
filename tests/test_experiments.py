@@ -1,4 +1,4 @@
-"""单元与集成测试：验证实验框架、指标计算及结果文件 (NPZ/CSV) 自动持久化落盘。"""
+"""单元与集成测试：验证实验框架、指标计算、结果文件 (NPZ/CSV) 自动持久化落盘、自动旧数据清理及 Benchmark 分类扩展。"""
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,7 +6,7 @@ import numpy as np
 
 from core.metrics import calculate_hv, calculate_igd
 from experiments.config import ExperimentConfig
-from experiments.run_experiment import run_batch_experiment, run_single_run
+from experiments.run_experiment import resolve_problems, run_batch_experiment, run_single_run
 
 
 class TestExperiments(unittest.TestCase):
@@ -27,8 +27,24 @@ class TestExperiments(unittest.TestCase):
         hv_val = calculate_hv(points, np.array([2.0, 2.0]))
         self.assertGreater(hv_val, 0.0)
 
+    def test_resolve_problems_by_category(self):
+        """测试按 Benchmark 分类解析展开测试问题。"""
+        # 测试单一分类展开
+        cdtlzs = resolve_problems(categories=["C-DTLZs"])
+        self.assertEqual(len(cdtlzs), 4)
+        self.assertIn("C1DTLZ1", cdtlzs)
+        self.assertIn("C3DTLZ4", cdtlzs)
+
+        # 测试 --problems 中传入分类名称
+        probs = resolve_problems(problems=["C-DTLZs"])
+        self.assertEqual(probs, cdtlzs)
+
+        # 测试 ALL 分类展开
+        all_probs = resolve_problems(categories=["ALL"])
+        self.assertEqual(len(all_probs), 4 + 6 + 9 + 14)
+
     def test_run_single_run_and_npz_saving(self):
-        """测试单问题运行并验证 NPZ 保存的完整字段。"""
+        """测试单问题运行并验证在 Benchmark 分类目录下生成 NPZ 文件。"""
         with tempfile.TemporaryDirectory() as tmp_dir:
             res = run_single_run(
                 algo_name="DSOCOL",
@@ -44,17 +60,46 @@ class TestExperiments(unittest.TestCase):
             self.assertIn("igd", res)
             self.assertIn("hv", res)
 
-            # 验证生成了 NPZ 文件
-            npz_file = Path(tmp_dir) / "DSOCOL" / "C1DTLZ1" / "run_seed_42.npz"
-            self.assertTrue(npz_file.exists())
+            # 验证在 C-DTLZs 分类下生成了 NPZ 文件
+            npz_files = list(Path(tmp_dir).rglob("run_seed_42.npz"))
+            self.assertTrue(len(npz_files) == 1)
 
-            data = np.load(npz_file)
+            data = np.load(npz_files[0])
             self.assertIn("x", data)
             self.assertIn("f", data)
             self.assertIn("cv", data)
             self.assertIn("elapsed_time", data)
             self.assertIn("igd", data)
             self.assertIn("hv", data)
+
+    def test_clear_old_results_on_new_run(self):
+        """测试重新运行实验时自动清除旧的 NPZ 运行结果文件。"""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # 1. 第一次运行：n_runs=5
+            config1 = ExperimentConfig(
+                population_size=20,
+                max_evals=400,
+                n_runs=5,
+                algorithms=["APSEA"],
+                problems=["C1DTLZ1"],
+                results_dir=tmp_dir,
+            )
+            run_batch_experiment(config1)
+            npz_files_after_run1 = list(Path(tmp_dir).rglob("*.npz"))
+            self.assertEqual(len(npz_files_after_run1), 5)
+
+            # 2. 第二次运行：n_runs=3 (应该先清空之前的 5 个 NPZ，最终只留 3 个)
+            config2 = ExperimentConfig(
+                population_size=20,
+                max_evals=400,
+                n_runs=3,
+                algorithms=["APSEA"],
+                problems=["C1DTLZ1"],
+                results_dir=tmp_dir,
+            )
+            run_batch_experiment(config2)
+            npz_files_after_run2 = list(Path(tmp_dir).rglob("*.npz"))
+            self.assertEqual(len(npz_files_after_run2), 3)
 
     def test_run_batch_experiment_and_csv_generation(self):
         """测试小规模批量运行并验证导出 CSV 汇总表格。"""

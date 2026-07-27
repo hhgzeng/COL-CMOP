@@ -34,7 +34,7 @@ COL-CMOP/
 │   └── pocea/                  # POCEA (成对偏好约束进化算法)
 │
 ├── problems/                   # [Benchmark 问题集 (Python/pymoo)]
-│   ├── cdtlz.py                # 校准后的 C-DTLZ 问题集 (C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ1, C3DTLZ4)
+│   ├── cdtlz.py                # 校准后的 C-DTLZ 问题集 (C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ4)
 │   ├── dascmop.py              # DAS-CMOP 问题集 (DASCMOP1 ~ DASCMOP9)
 │   ├── dcdtlz.py               # DC-DTLZ 问题集 (DC1DTLZ1 ~ DC3DTLZ3)
 │   └── lircmop.py              # LIR-CMOP 问题集 (LIRCMOP1 ~ LIRCMOP14)
@@ -82,7 +82,7 @@ COL-CMOP/
 | **POCEA** | Pairwise Preference Constrained Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
 
 ### Benchmark 测试集 (4 大系列)
-- **C-DTLZ**: C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ1, C3DTLZ4
+- **C-DTLZ**: C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ4
 - **DC-DTLZ**: DC1DTLZ1, DC1DTLZ3, DC2DTLZ1, DC2DTLZ3, DC3DTLZ1, DC3DTLZ3
 - **DAS-CMOP**: DASCMOP1 ~ DASCMOP9 (支持自定义 `difficulty` 参数)
 - **LIR-CMOP**: LIRCMOP1 ~ LIRCMOP14 (包含复杂/大面积不可行区域约束)

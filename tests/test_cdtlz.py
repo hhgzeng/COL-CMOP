@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from core.problem import PymooProblemAdapter
-from problems.cdtlz import C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ1, C3DTLZ4
+from problems.cdtlz import C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ4
 
 
 class TestCDTLZProblems(unittest.TestCase):
@@ -65,21 +65,6 @@ class TestCDTLZProblems(unittest.TestCase):
 
         self.assertEqual(res.f.shape, (1, 3))
         self.assertEqual(res.g.shape, (1, 1))
-
-    def test_c3dtlz1_fixed_input(self):
-        """测试 C3DTLZ1 在固定 X 输入下的维度及多线性约束计算。"""
-        prob = C3DTLZ1()
-        adapter = PymooProblemAdapter(prob)
-
-        self.assertEqual(adapter.n_var, 7)
-        self.assertEqual(adapter.n_obj, 3)
-
-        x = np.full((1, 7), 0.5)
-        res = adapter.evaluate(x)
-        assert res.g is not None
-
-        self.assertEqual(res.f.shape, (1, 3))
-        self.assertEqual(res.g.shape, (1, 3))  # 3 个线性约束
 
     def test_c3dtlz4_fixed_input(self):
         """测试 C3DTLZ4 在固定 X 输入下的维度及多球面约束计算。"""

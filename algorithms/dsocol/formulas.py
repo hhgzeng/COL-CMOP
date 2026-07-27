@@ -128,10 +128,11 @@ def update_cso_winner_s1(
 ) -> Array:
     """公式 (5): S1 获胜者基于中心点与配对差值的 SBX 交叉更新。"""
     x_new = x_w.copy()
-    half = len(w_indices := np.arange(len(x_w))) // 2
+    w_indices = rng.permutation(len(x_w))
+    half = len(w_indices) // 2
     left, right = w_indices[:half], w_indices[half:]
     center, delta = (x_new[left] + x_new[right]) / 2.0, x_new[left] - x_new[right]
-    u = rng.random((half, 1))
+    u = rng.random(delta.shape)
     beta = np.where(
         u <= 0.5,
         (2.0 * u) ** (1.0 / (distribution_index + 1.0)),
@@ -153,7 +154,12 @@ def update_cso_winner_s2(
 
     for k in w_indices:
         choices = w_indices[w_indices != k]
-        i, j = rng.choice(choices, size=2, replace=False)
+        if len(choices) >= 2:
+            i, j = rng.choice(choices, size=2, replace=False)
+        elif len(choices) == 1:
+            i = j = choices[0]
+        else:
+            i = j = k
         x_new[k] += (best_x - x_new[k]) / 2.0 + (x_w[i] - x_w[j]) / 2.0
 
     return x_new
@@ -207,7 +213,8 @@ def update_epsilon(
     ε(t+1) = ε_max, otherwise
     """
     if ratio <= alpha:
-        sigma_min = float(np.clip(1.0 - (t_max / 3.0) / (epsilon_max + 1e-15), 0.0, 0.95))
+        power = np.power(1.0 / max(epsilon_max, 1e-15), t_max / 3.0)
+        sigma_min = float(np.clip(1.0 - power, 0.0, 0.95))
         sigma = rng.uniform(sigma_min, 1.0)
         return float((1.0 - sigma) * epsilon)
     return float(epsilon_max)

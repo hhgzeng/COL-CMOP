@@ -133,15 +133,18 @@ def algorithm3_collaborative_orthogonal_learning(
         # S1 趋势学习
         cand1 = np.argsort(a1[:, j])[:quota]
         nd = cand1[nondominated_feasible_indices(s1.f[cand1], s1.cv[cand1])]
-        rem = [i for i in cand1 if i not in nd]
-        if len(nd) and rem:
+        rem = np.array([i for i in cand1 if i not in nd], dtype=int)
+        if len(cand1) == 1:
+            winner = loser = cand1[0]
+        elif len(nd) >= 2 and len(rem) == 0:
+            winner, loser = rng.choice(nd, size=2, replace=False)
+        elif len(nd) >= 1 and len(rem) >= 1:
             winner, loser = rng.choice(nd), rng.choice(rem)
         else:
             ranked = cand1[np.argsort(s1.cv[cand1])]
-            winner, loser = (
-                rng.choice(ranked[: len(ranked) // 2]),
-                rng.choice(ranked[len(ranked) // 2 :]),
-            )
+            mid = max(1, len(ranked) // 2)
+            winner = rng.choice(ranked[:mid])
+            loser = rng.choice(ranked[mid:]) if mid < len(ranked) else winner
 
         boundary = upper if rng.random() < 0.5 else lower
         # 调用公式 (8)
@@ -333,6 +336,8 @@ class DSOCOL:
         while problem.eval_count < problem.max_evals:
             t += 1
 
+            v1_old, v2_old = v1.copy(), v2.copy()
+
             # Line 8-9: 调用 Algorithm 2 生成子代 O1, O2
             o1, v1 = algorithm2_offspring_generation(
                 problem, s1, v1, f1, 1, self.rng, self.distribution_index
@@ -341,8 +346,8 @@ class DSOCOL:
                 problem, s2, v2, f2, 2, self.rng, self.distribution_index
             )
 
-            merged_v1 = np.concatenate([v1, np.zeros_like(o1.x), np.zeros_like(o2.x)], axis=0)
-            merged_v2 = np.concatenate([v2, np.zeros_like(o1.x), np.zeros_like(o2.x)], axis=0)
+            merged_v1 = np.concatenate([v1_old, v1, np.zeros_like(o2.x)], axis=0)
+            merged_v2 = np.concatenate([v2_old, np.zeros_like(o1.x), v2], axis=0)
 
             # Line 10-11: 调用 Algorithm 4 环境选择与 Algorithm 5 NGSS 选择
             s1, v1, f1 = algorithm4_environmental_selection(merge_pops(s1, o1, o2), merged_v1, self.n, epsilon)

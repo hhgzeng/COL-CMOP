@@ -29,7 +29,6 @@ def tournament_selection(k: int, n_select: int, fitness: Array, rng: np.random.G
     return selected
 
 
-
 def operator_ga(
     x: Array,
     lower: Array,
@@ -211,5 +210,3 @@ def uniform_point(n: int, m: int) -> tuple[Array, int]:
 
     w = np.array(list(_generate_recursive(m, H)), dtype=float) / float(H)
     return w, len(w)
-
-

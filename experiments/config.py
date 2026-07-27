@@ -17,7 +17,7 @@ from algorithms import (
     LCMEA,
     POCEA,
 )
-from problems.cdtlz import C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ1, C3DTLZ4
+from problems.cdtlz import C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ4
 from problems.dascmop import (
     DASCMOP1,
     DASCMOP2,
@@ -72,7 +72,6 @@ PROBLEM_REGISTRY: dict[str, Callable[..., Any]] = {
     "C1DTLZ1": C1DTLZ1,
     "C1DTLZ3": C1DTLZ3,
     "C2DTLZ2": C2DTLZ2,
-    "C3DTLZ1": C3DTLZ1,
     "C3DTLZ4": C3DTLZ4,
     # DC-DTLZ Benchmarks
     "DC1DTLZ1": DC1DTLZ1,
@@ -106,6 +105,13 @@ PROBLEM_REGISTRY: dict[str, Callable[..., Any]] = {
     "LIRCMOP12": LIRCMOP12,
     "LIRCMOP13": LIRCMOP13,
     "LIRCMOP14": LIRCMOP14,
+}
+
+BENCHMARK_CATEGORIES: dict[str, list[str]] = {
+    "C-DTLZs": ["C1DTLZ1", "C1DTLZ3", "C2DTLZ2", "C3DTLZ4"],
+    "DC-DTLZs": ["DC1DTLZ1", "DC1DTLZ3", "DC2DTLZ1", "DC2DTLZ3", "DC3DTLZ1", "DC3DTLZ3"],
+    "DAS-CMOP": [f"DASCMOP{i}" for i in range(1, 10)],
+    "LIR-CMOP": [f"LIRCMOP{i}" for i in range(1, 15)],
 }
 
 

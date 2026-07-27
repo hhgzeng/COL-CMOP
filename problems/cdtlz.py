@@ -1,4 +1,4 @@
-"""Constrained DTLZ test problems (C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ1, C3DTLZ4)."""
+"""Constrained DTLZ test problems (C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ4)."""
 
 from typing import Any
 
@@ -157,32 +157,6 @@ class C2DTLZ2(DTLZ2):
         return F[G <= 0]
 
 
-class C3DTLZ1(DTLZ1):
-    """Constrained DTLZ1 problem with multiple linear inequality constraints."""
-
-    def __init__(self, n_var: int = 7, n_obj: int = 3, **kwargs) -> None:
-        """Initialize C3DTLZ1.
-
-        Args:
-            n_var: Number of variables.
-            n_obj: Number of objectives.
-            **kwargs: Additional arguments passed to parent.
-        """
-        super().__init__(n_var=n_var, n_obj=n_obj, n_ieq_constr=n_obj, **kwargs)
-
-    def _evaluate(self, x, out, *args, **kwargs) -> None:
-        """Evaluate objectives and linear constraints.
-
-        Args:
-            x: Decision variables.
-            out: Output dictionary.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-        """
-        super()._evaluate(x, out, *args, **kwargs)
-        out["G"] = constraint_c3_linear(out["F"])
-
-
 class C3DTLZ4(DTLZ4):
     """Constrained DTLZ4 problem with multiple spherical inequality constraints."""
 
@@ -282,25 +256,6 @@ def constraint_c2(f, r):
     g = anp.minimum(v1, v2.flatten())
 
     return g
-
-
-def constraint_c3_linear(f):
-    """Compute multiple linear constraints for C3DTLZ1.
-
-    Args:
-        f: Objective values.
-
-    Returns:
-        Constraint values.
-    """
-    n_obj = f.shape[1]
-    g = []
-
-    for i in range(n_obj):
-        _g = 1 - f[:, i] / 0.5 - (anp.sum(f, axis=1) - f[:, i])
-        g.append(_g)
-
-    return anp.column_stack(g)
 
 
 def constraint_c3_spherical(f):
