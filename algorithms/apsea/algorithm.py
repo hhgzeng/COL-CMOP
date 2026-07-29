@@ -21,7 +21,7 @@ from algorithms.apsea.selection import (
 def calc_maxchange(ideal_points: Array, nadir_points: Array, gen: int, last_gen: int) -> float:
     """计算目标理想点与 Nadir 点的离散最大变化率 (对应 APSEA.m)。"""
     delta_value = 1e-6 * np.ones(ideal_points.shape[1], dtype=float)
-    prev_idx = gen - last_gen  # 下标从 0 开始
+    prev_idx = gen - last_gen + 1  # 对应 Matlab 1-based 下标 gen - last_gen + 1
     
     denom_ideal = np.maximum(ideal_points[prev_idx], delta_value)
     denom_nadir = np.maximum(nadir_points[prev_idx], delta_value)
@@ -95,7 +95,7 @@ class APSEA:
         pop1 = self._evaluate(problem, x1)
         pop2 = self._evaluate(problem, x2)
 
-        fit1 = cal_fitness(pop1.f, pop1.g)
+        fit1 = cal_fitness(pop1.f, cv=pop1.cv)
         fit2 = cal_fitness(pop2.f, None)
 
         max_gen_estimate = max(1, problem.max_evals // self.n_pop)
@@ -149,7 +149,7 @@ class APSEA:
             elif max_change > self.beta:
                 # 分支 2：目标空间剧烈变化阶段 -> epsilon 约束控制
                 max_k = max(1, math.ceil(problem.max_evals / self.n_pop) - 1)
-                epsilon = reduce_boundary(epsilon0, gen, max_k, self.cp)
+                epsilon = reduce_boundary(epsilon0, gen + 1, max_k, self.cp)
 
                 n_sub2 = max(
                     int(math.ceil(self.n_pop / 2.0 * (1.0 - math.log2(1.0 + fr)) + self.n_pop / 2.0 * (1.0 - math.log2(1.0 + fe_ratio)))),

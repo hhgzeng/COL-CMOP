@@ -6,29 +6,35 @@ import numpy as np
 from core.schema import Array
 
 
-def cal_fitness(pop_obj: Array, pop_con: Array | None = None) -> Array:
+def cal_fitness(pop_obj: Array, pop_con: Array | None = None, cv: Array | None = None) -> Array:
     """计算每个解的适应度 (对应 PlatEMO 的 CalFitness.m)。
 
     Args:
         pop_obj: 目标函数值矩阵 (N, M)。
-        pop_con: 约束矩阵 (N, K) 或 None。
+        pop_con: 约束矩阵 (N, K) 或 1D 约束违反度数组 (N,)。
+        cv: 显式声明的约束违反度数组 (N,)。
 
     Returns:
         Fitness 一维数组 (N,)。适应度越小越优。
     """
     n = len(pop_obj)
-    if pop_con is None or pop_con.size == 0:
-        cv = np.zeros(n, dtype=float)
+    if cv is not None:
+        cv_vec = np.asarray(cv, dtype=float)
+    elif pop_con is not None and pop_con.size > 0:
+        if pop_con.ndim == 1:
+            cv_vec = np.asarray(pop_con, dtype=float)
+        else:
+            cv_vec = np.maximum(pop_con, 0.0).sum(axis=1)
     else:
-        cv = np.maximum(pop_con, 0.0).sum(axis=1)
+        cv_vec = np.zeros(n, dtype=float)
 
     # 1. 检测支配关系
     dominate = np.zeros((n, n), dtype=bool)
     for i in range(n - 1):
         for j in range(i + 1, n):
-            if cv[i] < cv[j]:
+            if cv_vec[i] < cv_vec[j]:
                 dominate[i, j] = True
-            elif cv[i] > cv[j]:
+            elif cv_vec[i] > cv_vec[j]:
                 dominate[j, i] = True
             else:
                 # 处于相同约束违反水平时按目标支配关系比较

@@ -122,5 +122,6 @@ class CMOCSO:
             history["epsilon"].append(float(var_epsilon))
 
         # Non-dominated feasible solutions
-        feas_pop = update_p(main_pop, len(main_pop.x))
-        return Result(population=main_pop, feasible_nondominated=feas_pop, eval_count=problem.eval_count, history=history)
+        feas_pop = update_p(main_pop, len(main_pop.x)) if len(main_pop.x) > 0 else main_pop
+        final_pop = main_pop if len(main_pop.x) > 0 else comp_pop
+        return Result(population=final_pop, feasible_nondominated=feas_pop, eval_count=problem.eval_count, history=history)

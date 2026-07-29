@@ -8,9 +8,9 @@ import math
 import numpy as np
 
 from algorithms.im_c_moea_d.constraint import apply_constraint_handling
-from algorithms.im_c_moea_d.operators import kmeans_clusters
+from algorithms.im_c_moea_d.operators import gp_operator, kmeans_clusters
 from algorithms.im_c_moea_d.replacement import global_replacement
-from core.operators import operator_ga, tournament_selection, uniform_point
+from core.operators import tournament_selection, uniform_point
 from core.schema import CMOP, Array, Population, Result
 
 
@@ -46,7 +46,7 @@ class IMCMOEAD:
         lo, hi = problem.lower, problem.upper
         m = problem.n_obj
 
-        # 1. 权重向量与邻域结构
+        # 1. 权重向量与 B 邻域结构
         weights, real_n = uniform_point(self.n_pop, m)
         self.n_pop = real_n
         t_size = math.ceil(self.n_pop / 10.0)
@@ -62,8 +62,11 @@ class IMCMOEAD:
         history: dict[str, list[float]] = {"fe": []}
 
         while problem.eval_count < problem.max_evals:
-            labels = kmeans_clusters(pop.f, k=min(self.k_clusters, self.n_pop), rng=self.rng)
+            # 约束惩罚转换目标空间
+            pop_penalized = apply_constraint_handling(pop)
 
+            # K-Means 聚类
+            labels = kmeans_clusters(pop.f, k=min(self.k_clusters, self.n_pop), rng=self.rng)
             offspring_list: list[Population] = []
             unique_labels = np.unique(labels)
 
@@ -75,27 +78,32 @@ class IMCMOEAD:
                 mating = tournament_selection(2, cluster_size, pop.cv[cluster_idx], self.rng)
                 parents_idx = cluster_idx[mating]
 
-                off_x = operator_ga(pop.x[parents_idx], lo, hi, self.rng)
-                off = self._evaluate(problem, off_x)
+                parents_pop = Population(
+                    x=pop.x[parents_idx],
+                    f=pop.f[parents_idx],
+                    cv=pop.cv[parents_idx],
+                    g=pop.g[parents_idx] if pop.g is not None else None,
+                    h=pop.h[parents_idx] if pop.h is not None else None,
+                )
+                off = gp_operator(problem, parents_pop, parents_pop.f, self.rng)
                 offspring_list.append(off)
 
             offsprings = self._merge(*offspring_list)
 
-            # 约束惩罚转换目标空间
-            pop_obj_mod = apply_constraint_handling(pop)
-            off_obj_mod = apply_constraint_handling(offsprings)
+            # 计算子代的约束惩罚目标值
+            off_penalized = apply_constraint_handling(offsprings)
 
             # 更新理想点与 Nadir 点
-            combined_mod = np.vstack([pop_obj_mod, off_obj_mod])
-            ideal_point = np.minimum(ideal_point, np.min(combined_mod, axis=0))
-            nadir_point = np.maximum(np.max(combined_mod, axis=0), ideal_point + 1e-6)
+            ideal_point = np.minimum(ideal_point, np.min(off_penalized, axis=0))
+            all_penalized = np.vstack([pop_penalized, off_penalized])
+            nadir_point = np.maximum(np.max(all_penalized, axis=0), ideal_point + 1e-6)
 
-            span = nadir_point - ideal_point + 1e-15
-            pop_norm = (pop_obj_mod - ideal_point) / span
-            off_norm = (off_obj_mod - ideal_point) / span
+            denom = np.maximum(nadir_point - ideal_point, 1e-12)
+            pop_norm = (pop_penalized - ideal_point) / denom
+            off_norm = (off_penalized - ideal_point) / denom
 
-            # 全局替换更新种群
-            pop = global_replacement(pop, offsprings, weights, b_neighbors, t_size, pop_norm, off_norm)
+            # 全局/邻域替换更新种群
+            pop = global_replacement(pop, offsprings, weights, b_neighbors, t_size, pop_norm, off_norm, self.rng)
             history["fe"].append(float(problem.eval_count))
 
         # Final non-dominated feasible population

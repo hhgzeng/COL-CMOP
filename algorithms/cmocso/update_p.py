@@ -33,13 +33,12 @@ def update_p(pop: Population, target_n: int) -> Population:
         h=pop.h[feasible_mask] if pop.h is not None else None,
     )
     if len(pop_feas.x) == 0:
-        cv_order = np.argsort(pop.cv)[:target_n]
         return Population(
-            x=pop.x[cv_order],
-            f=pop.f[cv_order],
-            cv=pop.cv[cv_order],
-            g=pop.g[cv_order] if pop.g is not None else None,
-            h=pop.h[cv_order] if pop.h is not None else None,
+            x=np.empty((0, pop.x.shape[1])),
+            f=np.empty((0, pop.f.shape[1])),
+            cv=np.empty(0),
+            g=np.empty((0, pop.g.shape[1])) if pop.g is not None else None,
+            h=np.empty((0, pop.h.shape[1])) if pop.h is not None else None,
         )
     if len(pop_feas.x) <= target_n:
         return pop_feas

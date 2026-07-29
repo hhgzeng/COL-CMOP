@@ -2,12 +2,19 @@
 已增加功能：
 1. 自动叠加真实 Pareto 前沿参考点（True PF）。
 2. 在图表中自动增加实验参数说明（FE 次数、种群规模 N、变量维数 D、可行解数量、均值 IGD/HV 等）。
+3. 支持灵活筛选：可针对单一算法 (--algo)、单一 Benchmark 分类 (--category)、或单一具体 Benchmark 问题 (--problem / --benchmark)。
 
 用法示例：
-    # 绘制 APSEA 在 C-DTLZs 分类下所有 NPZ 文件的 Pareto 前沿并保存图像
+    # 1. 针对单一算法和单一 Benchmark 问题
+    python batch_plot_pareto.py --algo APSEA --problem C1DTLZ1
+
+    # 2. 针对单一算法和一类 Benchmark
     python batch_plot_pareto.py --algo APSEA --category C-DTLZs
 
-    # 批量绘制所有算法和所有 Benchmark 分类的 Pareto 前沿图像
+    # 3. 针对所有算法在某个特定 Benchmark 问题
+    python batch_plot_pareto.py --problem C1DTLZ1
+
+    # 4. 批量绘制所有算法和所有 Benchmark 分类的 Pareto 前沿图像
     python batch_plot_pareto.py
 """
 
@@ -246,8 +253,14 @@ def plot_pareto_for_problem(
     plt.close(fig)
 
 
-def batch_plot_category(algo_name: str, category: str, results_dir: Path = RESULTS_DIR, show: bool = False):
-    """批量绘制某算法下某 Benchmark 分类下的所有 NPZ 文件 Pareto 图形。"""
+def batch_plot_category(
+    algo_name: str,
+    category: str,
+    results_dir: Path = RESULTS_DIR,
+    show: bool = False,
+    problem_filter: str | None = None
+):
+    """批量绘制某算法下某 Benchmark 分类下的 NPZ 文件 Pareto 图形。"""
     cat_dir = results_dir / algo_name / category
     if not cat_dir.exists():
         return
@@ -255,6 +268,11 @@ def batch_plot_category(algo_name: str, category: str, results_dir: Path = RESUL
     prob_dirs = sorted([d for d in cat_dir.iterdir() if d.is_dir() and d.name != "plots"])
     if not prob_dirs:
         return
+
+    if problem_filter:
+        prob_dirs = [d for d in prob_dirs if d.name.upper() == problem_filter.upper()]
+        if not prob_dirs:
+            return
 
     print(f"\n🎨 批量绘制 Pareto 前沿: 算法 [{algo_name}] | Benchmark 分类 [{category}]")
     for prob_dir in prob_dirs:
@@ -267,6 +285,7 @@ def main():
     parser = argparse.ArgumentParser(description="【方法三】批量查看并绘制每个算法在各 Benchmark 分类下的 NPZ 文件 Pareto 前沿图 (含 True PF 与参数面板)。")
     parser.add_argument("--algo", type=str, default=None, help="指定要查看绘图的算法名称 (如 APSEA, DSOCOL)。若不指定则扫描所有算法。")
     parser.add_argument("--category", type=str, default=None, choices=list(BENCHMARK_CATEGORIES.keys()), help="指定 Benchmark 分类 (C-DTLZs, DC-DTLZs, DAS-CMOP, LIR-CMOP)。")
+    parser.add_argument("--problem", "--benchmark", "-p", type=str, default=None, help="指定具体的 Benchmark 测试问题名称 (如 C1DTLZ1, DASCMOP3)。")
     parser.add_argument("--show", action="store_true", help="是否在屏幕上弹出显示图形窗口。")
 
     args = parser.parse_args()
@@ -275,11 +294,20 @@ def main():
 
     algo_dirs = [d for d in RESULTS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")]
     algo_list = [args.algo] if args.algo else [d.name for d in algo_dirs]
-    cat_list = [args.category] if args.category else list(BENCHMARK_CATEGORIES.keys())
+    
+    # 如果指定了具体问题，且没指定分类，可以自动推断分类以缩小扫描范围
+    if args.problem and not args.category:
+        inferred_cat = classify_problem(args.problem)
+        if inferred_cat in BENCHMARK_CATEGORIES:
+            cat_list = [inferred_cat]
+        else:
+            cat_list = list(BENCHMARK_CATEGORIES.keys())
+    else:
+        cat_list = [args.category] if args.category else list(BENCHMARK_CATEGORIES.keys())
 
     for algo in algo_list:
         for cat in cat_list:
-            batch_plot_category(algo, cat, show=args.show)
+            batch_plot_category(algo, cat, show=args.show, problem_filter=args.problem)
 
 
 if __name__ == "__main__":

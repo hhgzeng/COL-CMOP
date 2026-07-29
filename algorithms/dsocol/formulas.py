@@ -118,7 +118,7 @@ def update_cso_loser(
     V_l = r0 * V_l + r1 * (X_w - X_l)
     X_l = X_l + V_l
     """
-    v_new = rng.random((len(x_l), 1)) * v_l + rng.random((len(x_l), 1)) * (x_w - x_l)
+    v_new = rng.random(x_l.shape) * v_l + rng.random(x_l.shape) * (x_w - x_l)
     x_new = x_l + v_new
     return x_new, v_new
 
@@ -200,21 +200,26 @@ def compute_col_orthogonal_direction(direction: Array, rng: np.random.Generator)
 # ---------------------------------------------------------------------------
 
 def update_epsilon(
+    t: int,
+    t_c: float,
     epsilon: float,
     ratio: float,
     alpha: float,
-    t_max: float,
     epsilon_max: float,
     rng: np.random.Generator,
 ) -> float:
     """论文公式 (7): 根据主群体可行率 ratio 动态更新 ε 边界。
 
-    ε(t+1) = (1 - σ) * ε(t), if fr <= α
-    ε(t+1) = ε_max, otherwise
+    - 当 t > t_c 时，ε 强制衰减/锁定为 0.0。
+    - 当 fr <= alpha 时，按 (1 - σ) 几何衰减，其中 σ_min 指数为 1 / t_c。
+    - 当 fr > alpha 时，重置为 initial max epsilon (仅限 t <= t_c 阶段)。
     """
+    if t > t_c:
+        return 0.0
     if ratio <= alpha:
-        power = np.power(1.0 / max(epsilon_max, 1e-15), t_max / 3.0)
+        power = np.power(1.0 / max(epsilon_max, 1e-15), 1.0 / max(float(t_c), 1.0))
         sigma_min = float(np.clip(1.0 - power, 0.0, 0.95))
         sigma = rng.uniform(sigma_min, 1.0)
         return float((1.0 - sigma) * epsilon)
     return float(epsilon_max)
+

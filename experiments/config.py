@@ -12,6 +12,11 @@ from algorithms import (
     CMOEMT,
     DRLOSEMCMO,
     DSOCOL,
+    DSOCOL1,
+    DSOCOL2,
+    DSOCOL3,
+    DSOCOL4,
+    DSOCOL5,
     DVCEA,
     IMCMOEAD,
     LCMEA,
@@ -56,6 +61,11 @@ from problems.lircmop import (
 
 ALGORITHM_REGISTRY: dict[str, Type[Any]] = {
     "DSOCOL": DSOCOL,
+    "DSOCOL1": DSOCOL1,
+    "DSOCOL2": DSOCOL2,
+    "DSOCOL3": DSOCOL3,
+    "DSOCOL4": DSOCOL4,
+    "DSOCOL5": DSOCOL5,
     "APSEA": APSEA,
     "C3M": C3M,
     "CMOCSO": CMOCSO,
@@ -66,6 +76,7 @@ ALGORITHM_REGISTRY: dict[str, Type[Any]] = {
     "LCMEA": LCMEA,
     "POCEA": POCEA,
 }
+
 
 PROBLEM_REGISTRY: dict[str, Callable[..., Any]] = {
     # C-DTLZ Benchmarks

@@ -5,7 +5,14 @@ from algorithms.c3m import C3M
 from algorithms.cmocso import CMOCSO
 from algorithms.cmoemt import CMOEMT
 from algorithms.drlos_emcmo import DRLOSEMCMO
-from algorithms.dsocol import DSOCOL
+from algorithms.dsocol import (
+    DSOCOL,
+    DSOCOL1,
+    DSOCOL2,
+    DSOCOL3,
+    DSOCOL4,
+    DSOCOL5,
+)
 from algorithms.dvcea import DVCEA
 from algorithms.im_c_moea_d import IMCMOEAD
 from algorithms.lcmea import LCMEA
@@ -13,6 +20,11 @@ from algorithms.pocea import POCEA
 
 __all__ = [
     "DSOCOL",
+    "DSOCOL1",
+    "DSOCOL2",
+    "DSOCOL3",
+    "DSOCOL4",
+    "DSOCOL5",
     "APSEA",
     "C3M",
     "CMOCSO",
@@ -23,3 +35,4 @@ __all__ = [
     "LCMEA",
     "POCEA",
 ]
+

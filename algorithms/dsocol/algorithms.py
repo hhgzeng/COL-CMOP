@@ -63,12 +63,13 @@ def algorithm2_offspring_generation(
     swarm_type: int,
     rng: np.random.Generator,
     distribution_index: float = 20.0,
+    winner_update_mode: str = "cso",
 ) -> tuple[Population, Array]:
     """Algorithm 2: Offspring Generation (子代生成)。
 
     1. 两两随机竞争，分为获胜组 Sw 与失败组 Sl
     2. 调用公式 (4) 更新失败组 Sl 的速度与位置
-    3. 群体 1 调用公式 (5) 对 Sw 进行 SBX 交叉；群体 2 调用公式 (6) 最佳引导 Sw
+    3. 群体 1 调用公式 (5) 对 Sw 进行 SBX 交叉；群体 2 调用公式 (6) 最佳引导 Sw (若 winner_update_mode == 'cso')
     4. 执行多项式变异与边界裁剪，评估返回新子代与速度
     """
     n = len(pop.x)
@@ -90,12 +91,13 @@ def algorithm2_offspring_generation(
     # 调用公式 (4)
     x[l], v[l] = update_cso_loser(x[w], x[l], v[l], rng)
 
-    if swarm_type == 1:
-        # 调用公式 (5)
-        x[w] = update_cso_winner_s1(x[w], rng, distribution_index)
-    else:
-        # 调用公式 (6)
-        x[w] = update_cso_winner_s2(x[w], fitness[w], rng)
+    if winner_update_mode == "cso":
+        if swarm_type == 1:
+            # 调用公式 (5)
+            x[w] = update_cso_winner_s1(x[w], rng, distribution_index)
+        else:
+            # 调用公式 (6)
+            x[w] = update_cso_winner_s2(x[w], fitness[w], rng)
 
     x = polynomial_mutation(x, problem.lower, problem.upper, rng)
     x = np.clip(x, problem.lower, problem.upper)
@@ -115,13 +117,16 @@ def algorithm3_collaborative_orthogonal_learning(
     s2: Population,
     weights: Array,
     tau: float,
+    epsilon: float,
     rng: np.random.Generator,
-) -> tuple[Population, Population]:
+    enable_trend_learning: bool = True,
+    enable_orthogonal_learning: bool = True,
+) -> tuple[Population | None, Population | None]:
     """Algorithm 3: Collaborative Orthogonal Learning (COL 协同正交学习)。
 
     1. 基于权重向量与角度选出候选解
-    2. 调用公式 (8) 趋势学习生成主群体的扩展解 main
-    3. 调用公式 (9) 正交补平面对 S2 进行采样生成扩展解 aux
+    2. 若 enable_trend_learning=True，调用公式 (8) 趋势学习生成主群体的扩展解 main
+    3. 若 enable_orthogonal_learning=True，调用公式 (9) 正交补平面对 S2 进行采样生成扩展解 aux
     """
     n = len(s1.x)
     quota = max(1, n // len(weights))
@@ -130,16 +135,16 @@ def algorithm3_collaborative_orthogonal_learning(
     lower, upper = problem.lower, problem.upper
 
     for j in range(len(weights)):
-        # S1 趋势学习
+        # S1 选出候选解，划分为 epsilon 可行非支配集与剩余解集 (Paper Alg 3 Line 5)
         cand1 = np.argsort(a1[:, j])[:quota]
-        nd = cand1[nondominated_feasible_indices(s1.f[cand1], s1.cv[cand1])]
-        rem = np.array([i for i in cand1 if i not in nd], dtype=int)
-        if len(cand1) == 1:
-            winner = loser = cand1[0]
-        elif len(nd) >= 2 and len(rem) == 0:
-            winner, loser = rng.choice(nd, size=2, replace=False)
-        elif len(nd) >= 1 and len(rem) >= 1:
-            winner, loser = rng.choice(nd), rng.choice(rem)
+        c1_cv = s1.cv[cand1]
+        relaxed_mask = c1_cv <= epsilon + 1e-12
+        relaxed_idx = cand1[relaxed_mask]
+        rem_idx = cand1[~relaxed_mask]
+
+        if len(relaxed_idx) > 0 and len(rem_idx) > 0:
+            winner = rng.choice(relaxed_idx)
+            loser = rng.choice(rem_idx)
         else:
             ranked = cand1[np.argsort(s1.cv[cand1])]
             mid = max(1, len(ranked) // 2)
@@ -147,33 +152,44 @@ def algorithm3_collaborative_orthogonal_learning(
             loser = rng.choice(ranked[mid:]) if mid < len(ranked) else winner
 
         boundary = upper if rng.random() < 0.5 else lower
-        # 调用公式 (8)
-        direction = compute_col_trend_direction(s1.x[winner], s1.x[loser], boundary, tau)
-        main.append(s1.x[winner] + rng.uniform(-1, 1) * direction)
 
-        # S2 正交补学习
-        cand2 = np.argsort(a2[:, j])[:quota]
-        feasible_nd = cand2[nondominated_feasible_indices(s2.f[cand2], s2.cv[cand2])]
-        anchor = (
-            rng.choice(feasible_nd)
-            if len(feasible_nd)
-            else cand2[np.argmin(s2.cv[cand2])]
-        )
-        # 调用公式 (9)
-        perpendicular = compute_col_orthogonal_direction(direction, rng)
-        aux.append(s2.x[anchor] + rng.uniform(-1, 1) * perpendicular)
+        if enable_trend_learning:
+            # S1 趋势学习调用公式 (8): u_main = x_r + eta_k * v
+            direction = compute_col_trend_direction(s1.x[winner], s1.x[loser], boundary, tau)
+            dist = np.linalg.norm(s1.x[winner] - boundary)
+            main.append(boundary + rng.uniform(0.5, 1.5) * dist * direction)
+        else:
+            # 无趋势学习时生成随机单位方向作为正交补基准方向
+            v_rand = rng.normal(size=len(lower))
+            norm = np.linalg.norm(v_rand)
+            direction = v_rand / norm if norm > 1e-15 else v_rand
 
-    main_arr = np.clip(np.asarray(main), lower, upper)
-    aux_arr = np.clip(np.asarray(aux), lower, upper)
+        if enable_orthogonal_learning:
+            # S2 正交补学习调用公式 (9)
+            cand2 = np.argsort(a2[:, j])[:quota]
+            feasible_nd = cand2[nondominated_feasible_indices(s2.f[cand2], s2.cv[cand2])]
+            anchor = (
+                rng.choice(feasible_nd)
+                if len(feasible_nd)
+                else cand2[np.argmin(s2.cv[cand2])]
+            )
+            perpendicular = compute_col_orthogonal_direction(direction, rng)
+            aux.append(s2.x[anchor] + rng.uniform(-1, 1) * perpendicular)
 
-    main_arr = polynomial_mutation(main_arr, lower, upper, rng)
-    aux_arr = polynomial_mutation(aux_arr, lower, upper, rng)
+    pop_main = None
+    if main:
+        main_arr = np.clip(np.asarray(main), lower, upper)
+        main_arr = polynomial_mutation(main_arr, lower, upper, rng)
+        res_main = problem.evaluate(main_arr)
+        pop_main = Population(x=main_arr, f=res_main.f, cv=res_main.cv, g=res_main.g, h=res_main.h)
 
-    res_main = problem.evaluate(main_arr)
-    res_aux = problem.evaluate(aux_arr)
+    pop_aux = None
+    if aux:
+        aux_arr = np.clip(np.asarray(aux), lower, upper)
+        aux_arr = polynomial_mutation(aux_arr, lower, upper, rng)
+        res_aux = problem.evaluate(aux_arr)
+        pop_aux = Population(x=aux_arr, f=res_aux.f, cv=res_aux.cv, g=res_aux.g, h=res_aux.h)
 
-    pop_main = Population(x=main_arr, f=res_main.f, cv=res_main.cv, g=res_main.g, h=res_main.h)
-    pop_aux = Population(x=aux_arr, f=res_aux.f, cv=res_aux.cv, g=res_aux.g, h=res_aux.h)
     return pop_main, pop_aux
 
 
@@ -273,11 +289,11 @@ def algorithm5_niche_guided_subset_selection(
 
 
 # ===========================================================================
-# Algorithm 1: The Framework of DSOCOL (DSOCOL 主框架)
+# Algorithm 1: The Framework of DSOCOL (DSOCOL 主框架及消融变体)
 # ===========================================================================
 
 class DSOCOL:
-    """Algorithm 1: The framework of DSOCOL."""
+    """Algorithm 1: The framework of DSOCOL (支持控制开关及消融扩展)。"""
 
     def __init__(
         self,
@@ -286,6 +302,11 @@ class DSOCOL:
         alpha: float = 0.95,
         distribution_index: float = 20.0,
         seed: int | None = None,
+        use_ngss: bool = True,
+        winner_update_mode: str = "cso",
+        enable_col: bool = True,
+        enable_trend_learning: bool = True,
+        enable_orthogonal_learning: bool = True,
     ):
         if population_size < 4 or population_size % 2:
             raise ValueError("种群规模必须是大于等于 4 的偶数")
@@ -294,6 +315,13 @@ class DSOCOL:
         self.alpha = alpha
         self.distribution_index = distribution_index
         self.rng = np.random.default_rng(seed)
+
+        # 消融控制开关
+        self.use_ngss = use_ngss
+        self.winner_update_mode = winner_update_mode
+        self.enable_col = enable_col
+        self.enable_trend_learning = enable_trend_learning
+        self.enable_orthogonal_learning = enable_orthogonal_learning
 
     def _evaluate(self, problem: CMOP, x: np.ndarray) -> Population:
         res = problem.evaluate(x)
@@ -327,6 +355,9 @@ class DSOCOL:
             "feasible_ratio_s1": [],
             "feasible_ratio_s2": [],
         }
+        ref_front = getattr(problem, "ref_front", None)
+        if ref_front is not None:
+            history["igd"] = []
 
         t = 0
         total_generations = max(1, problem.max_evals // (2 * self.n))
@@ -340,39 +371,68 @@ class DSOCOL:
 
             # Line 8-9: 调用 Algorithm 2 生成子代 O1, O2
             o1, v1 = algorithm2_offspring_generation(
-                problem, s1, v1, f1, 1, self.rng, self.distribution_index
+                problem, s1, v1, f1, 1, self.rng, self.distribution_index, self.winner_update_mode
             )
             o2, v2 = algorithm2_offspring_generation(
-                problem, s2, v2, f2, 2, self.rng, self.distribution_index
+                problem, s2, v2, f2, 2, self.rng, self.distribution_index, self.winner_update_mode
             )
 
             merged_v1 = np.concatenate([v1_old, v1, np.zeros_like(o2.x)], axis=0)
             merged_v2 = np.concatenate([v2_old, np.zeros_like(o1.x), v2], axis=0)
 
-            # Line 10-11: 调用 Algorithm 4 环境选择与 Algorithm 5 NGSS 选择
+            # Line 10-11: 环境选择 (S1 使用 SPEA2, S2 根据 use_ngss 选用 NGSS 或 SPEA2)
             s1, v1, f1 = algorithm4_environmental_selection(merge_pops(s1, o1, o2), merged_v1, self.n, epsilon)
-            s2, v2, f2 = algorithm5_niche_guided_subset_selection(merge_pops(s2, o1, o2), merged_v2, self.n, weights)
+            if self.use_ngss:
+                s2, v2, f2 = algorithm5_niche_guided_subset_selection(merge_pops(s2, o1, o2), merged_v2, self.n, weights)
+            else:
+                s2, v2, f2 = algorithm4_environmental_selection(merge_pops(s2, o1, o2), merged_v2, self.n, 0.0)
 
-            # Line 12-16: 每 T_COL (75) 代触发 Algorithm 3 COL 正交学习
-            if t % self.col_frequency == 0:
+            # Line 12-16: 每 T_COL (75) 代触发 Algorithm 3 COL 协同正交学习
+            if self.enable_col and t % self.col_frequency == 0:
                 tau = problem.eval_count / problem.max_evals
-                c1, c2 = algorithm3_collaborative_orthogonal_learning(problem, s1, s2, weights, tau, self.rng)
+                c1, c2 = algorithm3_collaborative_orthogonal_learning(
+                    problem,
+                    s1,
+                    s2,
+                    weights,
+                    tau,
+                    epsilon,
+                    self.rng,
+                    enable_trend_learning=self.enable_trend_learning,
+                    enable_orthogonal_learning=self.enable_orthogonal_learning,
+                )
 
-                merged_v1 = np.concatenate([v1, np.zeros_like(c1.x), np.zeros_like(c2.x)], axis=0)
-                merged_v2 = np.concatenate([v2, np.zeros_like(c1.x), np.zeros_like(c2.x)], axis=0)
+                col_pops = [p for p in (c1, c2) if p is not None]
+                if col_pops:
+                    merged_c = merge_pops(*col_pops)
+                    zeros_c = np.zeros_like(merged_c.x)
+                    merged_v1 = np.concatenate([v1, zeros_c], axis=0)
+                    merged_v2 = np.concatenate([v2, zeros_c], axis=0)
 
-                s1, v1, f1 = algorithm4_environmental_selection(merge_pops(s1, c1, c2), merged_v1, self.n, epsilon)
-                s2, v2, f2 = algorithm5_niche_guided_subset_selection(merge_pops(s2, c1, c2), merged_v2, self.n, weights)
+                    s1, v1, f1 = algorithm4_environmental_selection(merge_pops(s1, merged_c), merged_v1, self.n, epsilon)
+                    if self.use_ngss:
+                        s2, v2, f2 = algorithm5_niche_guided_subset_selection(merge_pops(s2, merged_c), merged_v2, self.n, weights)
+                    else:
+                        s2, v2, f2 = algorithm4_environmental_selection(merge_pops(s2, merged_c), merged_v2, self.n, 0.0)
 
             # Line 17-18: 按照公式 (7) 动态更新 ε
             ratio = float(np.mean(s1.cv <= 1e-12))
             t_max = max(1.0, problem.max_evals / (2.0 * self.n))
-            epsilon = update_epsilon(epsilon, ratio, self.alpha, t_max, epsilon_max, self.rng)
+            tc = max(1.0, t_max / 3.0)
+            epsilon = update_epsilon(t, tc, epsilon, ratio, self.alpha, epsilon_max, self.rng)
 
             history["fe"].append(float(problem.eval_count))
             history["epsilon"].append(epsilon)
             history["feasible_ratio_s1"].append(ratio)
             history["feasible_ratio_s2"].append(float(np.mean(s2.cv <= 1e-12)))
+
+            if ref_front is not None:
+                nd_temp = nondominated_feasible_indices(s1.f, s1.cv)
+                if len(nd_temp) > 0:
+                    from core.metrics import calculate_igd
+                    history["igd"].append(calculate_igd(s1.f[nd_temp], ref_front))
+                else:
+                    history["igd"].append(float("nan"))
 
         # Line 20: 返回 S1 的非支配可行解
         nd = nondominated_feasible_indices(s1.f, s1.cv)
@@ -382,3 +442,39 @@ class DSOCOL:
             eval_count=problem.eval_count,
             history=history,
         )
+
+
+class DSOCOL1(DSOCOL):
+    """消融变体 DSOCOL1：辅助种群 S2 采用 Algorithm 4 (SPEA2 截断) 替代 NGSS 策略。"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(use_ngss=False, **kwargs)
+
+
+class DSOCOL2(DSOCOL):
+    """消融变体 DSOCOL2：两种群获胜组仅通过多项式变异更新。"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(winner_update_mode="mutation", **kwargs)
+
+
+class DSOCOL3(DSOCOL):
+    """消融变体 DSOCOL3：不实现 COL (协同正交学习) 策略。"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(enable_col=False, **kwargs)
+
+
+class DSOCOL4(DSOCOL):
+    """消融变体 DSOCOL4：不实现趋势学习策略 (移除 Eq. (8))。"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(enable_trend_learning=False, **kwargs)
+
+
+class DSOCOL5(DSOCOL):
+    """消融变体 DSOCOL5：不实现正交学习策略 (移除 Eq. (9))。"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(enable_orthogonal_learning=False, **kwargs)
+

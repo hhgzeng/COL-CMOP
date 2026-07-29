@@ -14,8 +14,8 @@ def competitive_operator(
     n, d = loser_x.shape
     loser_vel = np.zeros((n, d), dtype=float)
 
-    r1 = rng.random((n, d))
-    r2 = rng.random((n, d))
+    r1 = rng.random((n, 1))
+    r2 = rng.random((n, 1))
 
     off_vel = r1 * loser_vel + r2 * (winner_x - loser_x) * y_val
     n_dir = rng.integers(1, 3)

@@ -8,7 +8,7 @@ from pymoo.problems.many.dtlz import DTLZ1, DTLZ3
 anp: Any = _anp_mod
 
 
-def constraint_dc1(X, a: int = 5, b: float = 0.95):
+def constraint_dc1(X, a: int = 3, b: float = 0.5):
     """Compute DC1 constraint.
 
     Args:
@@ -58,14 +58,16 @@ def constraints_dc3(X, gx, a: int = 5, b: float = 0.5):
 class DC1DTLZ1(DTLZ1):
     """Degenerate constrained DTLZ1 problem with one inequality constraint."""
 
-    def __init__(self, n_var: int = 12, n_obj: int = 3, **kwargs) -> None:
+    def __init__(self, n_var: int | None = None, n_obj: int = 3, **kwargs) -> None:
         """Initialize DC1DTLZ1.
 
         Args:
-            n_var: Number of variables.
+            n_var: Number of variables (defaults to n_obj + 4).
             n_obj: Number of objectives.
             **kwargs: Additional arguments passed to parent.
         """
+        if n_var is None:
+            n_var = n_obj + 4
         super().__init__(n_var, n_obj, **kwargs)
         self.n_ieq_constr = 1
 

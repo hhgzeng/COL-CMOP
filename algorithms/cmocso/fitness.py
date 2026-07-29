@@ -9,7 +9,8 @@ from core.schema import Array
 def cal_fitness(objs: Array, cv: Array, var_epsilon: float = 0.0) -> Array:
     """计算考虑 epsilon 约束的 SPEA2 适应度。"""
     n = len(objs)
-    eps_cv = np.maximum(0.0, cv - var_epsilon)
+    eps_cv = cv.copy()
+    eps_cv[eps_cv < var_epsilon] = 0.0
 
     dominate = np.zeros((n, n), dtype=bool)
     for i in range(n - 1):

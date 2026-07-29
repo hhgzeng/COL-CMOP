@@ -1,0 +1,5 @@
+Algorithm, Label        , Avg_IGD_Rank      , IGD_Wilcoxon_W/T/L, Avg_HV_Rank       , HV_Wilcoxon_W/T/L
+DSOCOL   , DSOCOL (Ours), 2.5               , N/A               , 2.1666666666666665, N/A
+APSEA    , APSEA        , 2.6666666666666665, 2/4/0             , 2.5               , 2/4/0
+CMOCSO   , CMOCSO       , 1.8333333333333333, 0/3/3             , 1.8333333333333333, 0/3/3
+IMCMOEAD , IM-C-MOEA/D  , 3.0               , 4/1/1             , 3.5               , 4/2/0

@@ -47,7 +47,7 @@ def take_pop(pop: Population, idx: Array) -> Population:
 
 def environmental_selection_cdp(pop: Population, target_n: int) -> tuple[Population, Array]:
     """对应 EnvironmentalSelection_CDP.m：基于 CDP 约束支配的选择。"""
-    fit = cal_fitness(pop.f, pop.g)
+    fit = cal_fitness(pop.f, cv=pop.cv)
 
     next_mask = fit < 1.0
     if next_mask.sum() < target_n:
@@ -101,7 +101,7 @@ def environmental_selection_epsilon(
 
     if f_pop is None or len(f_pop.x) == 0:
         assert if_pop is not None
-        if_fit = cal_fitness(if_pop.f, if_pop.g)
+        if_fit = cal_fitness(if_pop.f, cv=if_pop.cv)
         next2 = if_fit < 1.0
         if next2.sum() <= target_n:
             rank = np.argsort(if_fit)
@@ -138,7 +138,7 @@ def environmental_selection_epsilon(
 
         need_if = target_n - len(res_f_pop.x)
         if need_if > 0 and if_pop is not None and len(if_pop.x) > 0:
-            if_fit = cal_fitness(if_pop.f, if_pop.g)
+            if_fit = cal_fitness(if_pop.f, cv=if_pop.cv)
             next2 = if_fit < 1.0
             if next2.sum() <= need_if:
                 rank2 = np.argsort(if_fit)

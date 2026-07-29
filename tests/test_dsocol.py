@@ -2,7 +2,7 @@
 import unittest
 import numpy as np
 
-from algorithms.dsocol import DSOCOL
+from algorithms.dsocol import DSOCOL, DSOCOL1, DSOCOL3, DSOCOL4
 from core.problem import PymooProblemAdapter
 from problems.cdtlz import C1DTLZ1
 
@@ -22,6 +22,16 @@ class TestDSOCOL(unittest.TestCase):
         self.assertEqual(result.population.f.shape[1], 3)
         self.assertIn("fe", result.history)
         self.assertIn("feasible_ratio_s1", result.history)
+
+    def test_dsocol_ablation_variants_run(self):
+        """测试消融变体 DSOCOL1, DSOCOL3, DSOCOL4 能够正常运行并生成结果。"""
+        for variant_cls in [DSOCOL1, DSOCOL3, DSOCOL4]:
+            prob = PymooProblemAdapter(C1DTLZ1(), max_evals=600)
+            algo = variant_cls(population_size=20, col_frequency=5, seed=42)
+            res = algo.run(prob)
+            self.assertGreaterEqual(res.eval_count, 600)
+            self.assertEqual(len(res.population.x), 20)
+            self.assertEqual(res.population.f.shape[1], 3)
 
     def test_dsocol_reproducibility(self):
         """测试使用固定 seed 时 DSOCOL 算法的强可重复性。"""
@@ -52,3 +62,4 @@ class TestDSOCOL(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
