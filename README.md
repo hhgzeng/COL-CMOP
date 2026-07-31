@@ -56,11 +56,6 @@ COL-CMOP/
 ├── results/                    # [实验结果持久化存储]
 │   ├── detailed_runs.csv       # 多 Seed 运行明细表
 │   └── summary_metrics.csv     # 算法对比统计汇总表 (mean ± std)
-│
-├── problems-matlab/            # PlatEMO Benchmark MATLAB 参考源码
-├── algorithms-matlab/          # PlatEMO CMOEAs MATLAB 参考源码
-├── implementation_plan.md      # 阶段 1 设计方案与对齐规约
-└── walkthrough.md              # 项目阶段复现总结与 Walkthrough
 ```
 
 ---

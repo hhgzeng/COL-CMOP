@@ -238,12 +238,10 @@ def run_batch_experiment(config: ExperimentConfig) -> pd.DataFrame:
 
     df_detail = pd.DataFrame(all_metrics)
 
-    # 导出明细数据 CSV
+    # 保存明细与汇总 CSV 文件
     out_dir = Path(config.results_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    df_detail.to_csv(out_dir / "detailed_runs.csv", index=False)
 
-    # 导出统计汇总 CSV (mean ± std)
     summary_rows = []
     grouped = df_detail.groupby(["algorithm", "problem"])
     for key, group in grouped:
@@ -265,10 +263,9 @@ def run_batch_experiment(config: ExperimentConfig) -> pd.DataFrame:
         )
 
     df_summary = pd.DataFrame(summary_rows)
-    df_summary.to_csv(out_dir / "summary_metrics.csv", index=False)
 
     print("\n==================================================")
-    print(f"实验全部完成！统计汇总已存入 {out_dir / 'summary_metrics.csv'}")
+    print(f"实验全部完成！统计汇总已输出到控制台，结果目录为 {out_dir}")
     print(df_summary.to_string(index=False))
     print("==================================================")
 

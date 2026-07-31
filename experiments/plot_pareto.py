@@ -15,7 +15,7 @@
     python batch_plot_pareto.py --problem C1DTLZ1
 
     # 4. 批量绘制所有算法和所有 Benchmark 分类的 Pareto 前沿图像
-    python batch_plot_pareto.py
+    python experiments/plot_pareto.py
 """
 
 from __future__ import annotations
@@ -23,8 +23,11 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import cast
+
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.axes3d import Axes3D
 
 # 添加项目根目录到 sys.path 以便导入 PROBLEM_REGISTRY
 ROOT_DIR = Path(__file__).parent.parent.resolve()
@@ -43,7 +46,7 @@ BENCHMARK_CATEGORIES = {
     "LIR-CMOP": [f"LIRCMOP{i}" for i in range(1, 15)],
 }
 
-RESULTS_DIR = Path(__file__).parent.resolve()
+RESULTS_DIR = ROOT_DIR / "results"
 
 
 def classify_problem(prob_name: str) -> str:
@@ -109,7 +112,7 @@ def plot_pareto_for_problem(
         return
 
     plots_dir = output_dir / "plots"
-    plots_dir.mkdir(exist_ok=True)
+    plots_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. 搜集与解析统计数据信息
     eval_counts, pop_sizes, x_dims, f_dims = [], [], [], []
@@ -204,7 +207,7 @@ def plot_pareto_for_problem(
 
         # A. 绘制 True PF 参考散点 (使用高对比度鲜艳红色 #DC2626)
         if true_pf is not None and true_pf.shape[1] >= 3:
-            ax.scatter(true_pf[:, 0], true_pf[:, 1], true_pf[:, 2], color="#DC2626", s=25, alpha=0.7, edgecolors="#7F1D1D", linewidths=0.4, label="True PF (Reference)", zorder=1)
+            cast(Axes3D, ax).scatter(true_pf[:, 0], true_pf[:, 1], true_pf[:, 2], color="#DC2626", s=25, alpha=0.7, edgecolors="#7F1D1D", linewidths=0.4, label="True PF (Reference)", zorder=1)  # pyright: ignore[reportArgumentType]
 
         # B. 绘制各 Seed 解集
         for npz_file in npz_files:
@@ -212,7 +215,7 @@ def plot_pareto_for_problem(
             with np.load(npz_file) as data:
                 feas_f = data.get("feas_f", data.get("f", np.empty((0, 3))))
                 if len(feas_f) > 0:
-                    ax.scatter(feas_f[:, 0], feas_f[:, 1], feas_f[:, 2], alpha=0.7, s=20, label=f"Seed {seed}", zorder=2)
+                    cast(Axes3D, ax).scatter(feas_f[:, 0], feas_f[:, 1], feas_f[:, 2], alpha=0.7, s=20, label=f"Seed {seed}", zorder=2)  # pyright: ignore[reportArgumentType]
 
         ax.set_xlabel("$f_1$", fontsize=10)
         ax.set_ylabel("$f_2$", fontsize=10)
@@ -257,8 +260,9 @@ def batch_plot_category(
     algo_name: str,
     category: str,
     results_dir: Path = RESULTS_DIR,
+    output_dir: Path = RESULTS_DIR,
     show: bool = False,
-    problem_filter: str | None = None
+    problem_filter: str | None = None,
 ):
     """批量绘制某算法下某 Benchmark 分类下的 NPZ 文件 Pareto 图形。"""
     cat_dir = results_dir / algo_name / category
@@ -278,7 +282,14 @@ def batch_plot_category(
     for prob_dir in prob_dirs:
         npz_files = sorted(list(prob_dir.glob("*.npz")))
         if npz_files:
-            plot_pareto_for_problem(algo_name, category, prob_dir.name, npz_files, cat_dir, show=show)
+            plot_pareto_for_problem(
+                algo_name,
+                category,
+                prob_dir.name,
+                npz_files,
+                output_dir / algo_name / category,
+                show=show,
+            )
 
 
 def main():
@@ -287,12 +298,28 @@ def main():
     parser.add_argument("--category", type=str, default=None, choices=list(BENCHMARK_CATEGORIES.keys()), help="指定 Benchmark 分类 (C-DTLZs, DC-DTLZs, DAS-CMOP, LIR-CMOP)。")
     parser.add_argument("--problem", "--benchmark", "-p", type=str, default=None, help="指定具体的 Benchmark 测试问题名称 (如 C1DTLZ1, DASCMOP3)。")
     parser.add_argument("--show", action="store_true", help="是否在屏幕上弹出显示图形窗口。")
+    parser.add_argument(
+        "--results-dir",
+        type=Path,
+        default=RESULTS_DIR,
+        help="NPZ 结果目录（默认: results）",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="图片输出根目录（默认与 --results-dir 相同）",
+    )
 
     args = parser.parse_args()
+    results_dir = args.results_dir.expanduser()
+    output_dir = (args.output_dir or results_dir).expanduser()
 
-    ensure_category_structure()
+    ensure_category_structure(results_dir)
 
-    algo_dirs = [d for d in RESULTS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")]
+    algo_dirs = [
+        d for d in results_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
+    ]
     algo_list = [args.algo] if args.algo else [d.name for d in algo_dirs]
     
     # 如果指定了具体问题，且没指定分类，可以自动推断分类以缩小扫描范围
@@ -307,7 +334,14 @@ def main():
 
     for algo in algo_list:
         for cat in cat_list:
-            batch_plot_category(algo, cat, show=args.show, problem_filter=args.problem)
+            batch_plot_category(
+                algo,
+                cat,
+                results_dir=results_dir,
+                output_dir=output_dir,
+                show=args.show,
+                problem_filter=args.problem,
+            )
 
 
 if __name__ == "__main__":

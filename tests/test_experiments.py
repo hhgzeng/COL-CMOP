@@ -101,8 +101,8 @@ class TestExperiments(unittest.TestCase):
             npz_files_after_run2 = list(Path(tmp_dir).rglob("*.npz"))
             self.assertEqual(len(npz_files_after_run2), 3)
 
-    def test_run_batch_experiment_and_csv_generation(self):
-        """测试小规模批量运行并验证导出 CSV 汇总表格。"""
+    def test_run_batch_experiment_summary(self):
+        """测试小规模批量运行并验证返回控制台汇总 DataFrame。"""
         with tempfile.TemporaryDirectory() as tmp_dir:
             config = ExperimentConfig(
                 population_size=20,
@@ -116,11 +116,8 @@ class TestExperiments(unittest.TestCase):
             df_summary = run_batch_experiment(config)
 
             self.assertEqual(len(df_summary), 2)  # 2 个算法
-            detail_csv = Path(tmp_dir) / "detailed_runs.csv"
-            summary_csv = Path(tmp_dir) / "summary_metrics.csv"
-
-            self.assertTrue(detail_csv.exists())
-            self.assertTrue(summary_csv.exists())
+            self.assertIn("Algorithm", df_summary.columns)
+            self.assertIn("HV_Mean", df_summary.columns)
 
 
 if __name__ == "__main__":

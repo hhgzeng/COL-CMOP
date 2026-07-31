@@ -1,4 +1,4 @@
-"""消融实验图表绘制脚本 (results-compare/plot_ablation_comparison.py)。
+"""消融实验图表绘制脚本 (experiments/plot_ablation_comparison.py)。
 
 读取 results-compare 目录下的 NPZ 实验数据，绘制三组消融对比图：
 - 不输出 PDF 文件，仅保存高清 PNG 图片。
@@ -33,7 +33,8 @@ plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica", "SimHei"
 plt.rcParams["axes.unicode_minus"] = False
 plt.rcParams["mathtext.fontset"] = "cm"
 
-RESULTS_DIR = Path(__file__).parent.resolve()
+RESULTS_DIR = ROOT_DIR / "results-compare"
+OUTPUT_DIR = RESULTS_DIR
 
 
 def find_npz_file(algo_name: str, prob_name: str, seed: int = 42) -> Path | None:
@@ -120,7 +121,7 @@ def plot_group1_population(seed: int = 42):
         ax.tick_params(direction="in", top=True, right=True, labelsize=10)
 
     plt.tight_layout()
-    png_path = RESULTS_DIR / "Fig1_DSOCOL1_vs_DSOCOL_LIRCMOP3.png"
+    png_path = OUTPUT_DIR / "Fig1_DSOCOL1_vs_DSOCOL_LIRCMOP3.png"
     fig.savefig(png_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"✅ 第一组左右分图消融对比图已生成: {png_path.name}")
@@ -186,7 +187,7 @@ def plot_group2_convergence(seed: int = 42):
         ax.grid(True, linestyle=":", alpha=0.4)
 
     plt.tight_layout()
-    png_path = RESULTS_DIR / "Fig2_DSOCOL3_vs_DSOCOL_Convergence.png"
+    png_path = OUTPUT_DIR / "Fig2_DSOCOL3_vs_DSOCOL_Convergence.png"
     fig.savefig(png_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"✅ 第二组同图收敛图已生成: {png_path.name}")
@@ -252,20 +253,38 @@ def plot_group3_convergence(seed: int = 42):
         ax.grid(True, linestyle=":", alpha=0.4)
 
     plt.tight_layout()
-    png_path = RESULTS_DIR / "Fig3_DSOCOL4_vs_DSOCOL_Convergence.png"
+    png_path = OUTPUT_DIR / "Fig3_DSOCOL4_vs_DSOCOL_Convergence.png"
     fig.savefig(png_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"✅ 第三组同图收敛图已生成: {png_path.name}")
 
 
 def main():
+    global RESULTS_DIR, OUTPUT_DIR
     parser = argparse.ArgumentParser(description="消融图表自动绘制脚本 (仅保存 PNG)")
     parser.add_argument("--seed", type=int, default=42, help="要绘制数据的随机 Seed (默认 42)")
+    parser.add_argument(
+        "--results-dir",
+        type=Path,
+        default=RESULTS_DIR,
+        help="NPZ 结果目录（默认: results-compare）",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="PNG 输出目录（默认与 --results-dir 相同）",
+    )
     args = parser.parse_args()
+
+    RESULTS_DIR = args.results_dir.expanduser()
+    OUTPUT_DIR = (args.output_dir or RESULTS_DIR).expanduser()
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print("==================================================")
     print("开始生成三组消融实验同图对比图表 (仅 PNG 格式)...")
     print(f"搜索目录: {RESULTS_DIR}")
+    print(f"输出目录: {OUTPUT_DIR}")
     print("==================================================")
 
     plot_group1_population(seed=args.seed)
@@ -273,7 +292,7 @@ def main():
     plot_group3_convergence(seed=args.seed)
 
     print("==================================================")
-    print("图表绘制完成！生成的 PNG 图像已存入 results-compare 目录。")
+    print(f"图表绘制完成！生成的 PNG 图像已存入 {OUTPUT_DIR}。")
 
 
 if __name__ == "__main__":

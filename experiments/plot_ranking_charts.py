@@ -6,53 +6,43 @@ and relative performance scores across 4 constrained multi-objective optimizatio
 
 from __future__ import annotations
 
+import argparse
+import sys
+from pathlib import Path
+from typing import Any
+
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import shutil
 
-plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica', 'SimHei', 'STHeiti']
-plt.rcParams['axes.unicode_minus'] = False
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
-RESULTS_DIR = Path(__file__).parent.resolve()
-ARTIFACT_DIR = Path('/Users/jingzeng/.gemini/antigravity/brain/e26117dc-3a6f-4c08-910a-e4d6d0dc698d')
-ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+from experiments.analysis_utils import (  # noqa: E402
+    ALGORITHM_LABELS,
+    DEFAULT_RESULTS_DIR,
+    MAIN_ALGORITHMS,
+    ABLATION_ALGORITHMS,
+)
 
-df_detail = pd.read_csv(RESULTS_DIR / "per_problem_metrics_detail.csv")
-df_summary = pd.read_csv(RESULTS_DIR / "ranking_and_pvalues_summary.csv")
+plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica", "SimHei", "STHeiti"]
+plt.rcParams["axes.unicode_minus"] = False
 
-ALGOS = ["DSOCOL", "DSOCOL1", "DSOCOL3", "DSOCOL4"]
-ALGO_LABELS = {
-    "DSOCOL": "DSOCOL (Full)",
-    "DSOCOL1": "w/o NGSS",
-    "DSOCOL3": "w/o COL",
-    "DSOCOL4": "w/o Trend"
-}
-
-COLORS = {
-    "DSOCOL": "#2563EB",   # Vibrant Blue (Full Model)
-    "DSOCOL1": "#F59E0B",  # Amber/Orange (w/o NGSS)
-    "DSOCOL3": "#10B981",  # Emerald/Green (w/o COL)
-    "DSOCOL4": "#8B5CF6"   # Purple/Indigo (w/o Trend)
-}
-
-EDGE_COLORS = {
-    "DSOCOL": "#1E40AF",
-    "DSOCOL1": "#D97706",
-    "DSOCOL3": "#059669",
-    "DSOCOL4": "#7C3AED"
-}
-
-HATCHES = {
-    "DSOCOL": "///",
-    "DSOCOL1": "..",
-    "DSOCOL3": "\\\\\\",
-    "DSOCOL4": "xx"
-}
-
+RESULTS_DIR = DEFAULT_RESULTS_DIR
+df_detail = pd.DataFrame()
+df_summary = pd.DataFrame()
+ALGOS: list[str] = []
+ALGO_LABELS: dict[str, str] = {}
+COLORS: dict[str, str] = {}
+EDGE_COLORS: dict[str, str] = {}
+HATCHES: dict[str, str] = {}
 PROBLEMS = ["C1DTLZ1", "DC1DTLZ1", "DASCMOP1", "DASCMOP7", "LIRCMOP1", "LIRCMOP13"]
+
+
+def first_value(frame: Any, column: str) -> Any:
+    """Return the first value from a filtered pandas frame."""
+    return frame[column].iloc[0]
 
 
 def plot_overall_ranking_bars():
@@ -64,8 +54,8 @@ def plot_overall_ranking_bars():
     x_indices = np.arange(len(ALGOS))
     bar_width = 0.55
 
-    avg_igd = [df_summary[df_summary["Algorithm"] == a]["Avg_IGD_Rank"].values[0] for a in ALGOS]
-    avg_hv = [df_summary[df_summary["Algorithm"] == a]["Avg_HV_Rank"].values[0] for a in ALGOS]
+    avg_igd = [first_value(df_summary[df_summary["Algorithm"] == a], "Avg_IGD_Rank") for a in ALGOS]
+    avg_hv = [first_value(df_summary[df_summary["Algorithm"] == a], "Avg_HV_Rank") for a in ALGOS]
 
     # --- Subplot 1: IGD Average Ranking ---
     bars1 = ax1.bar(
@@ -139,7 +129,7 @@ def plot_overall_ranking_bars():
     fig.suptitle("Overall Algorithm Ranking Comparison (4 Algorithms across 6 Benchmarks)",
                  fontsize=13.5, fontweight='bold', color='#0F172A', y=0.98)
 
-    plt.tight_layout(rect=[0, 0.02, 1, 0.95])
+    plt.tight_layout(rect=(0.0, 0.02, 1.0, 0.95))
     
     out_file = RESULTS_DIR / "igd_hv_overall_ranking_bars.png"
     fig.savefig(out_file, dpi=300, bbox_inches='tight')
@@ -160,7 +150,7 @@ def plot_per_problem_ranks():
     # --- Top Subplot: IGD Ranks per Problem ---
     for a_idx, algo in enumerate(ALGOS):
         offset = (a_idx - (n_algos - 1) / 2) * bar_width
-        ranks = [df_detail[(df_detail["Problem"] == p) & (df_detail["Algorithm"] == algo)]["IGD_Rank"].values[0] for p in PROBLEMS]
+        ranks = [first_value(df_detail[(df_detail["Problem"] == p) & (df_detail["Algorithm"] == algo)], "IGD_Rank") for p in PROBLEMS]
         bars = ax1.bar(
             x_positions + offset,
             ranks,
@@ -192,7 +182,7 @@ def plot_per_problem_ranks():
     # --- Bottom Subplot: HV Ranks per Problem ---
     for a_idx, algo in enumerate(ALGOS):
         offset = (a_idx - (n_algos - 1) / 2) * bar_width
-        ranks = [df_detail[(df_detail["Problem"] == p) & (df_detail["Algorithm"] == algo)]["HV_Rank"].values[0] for p in PROBLEMS]
+        ranks = [first_value(df_detail[(df_detail["Problem"] == p) & (df_detail["Algorithm"] == algo)], "HV_Rank") for p in PROBLEMS]
         bars = ax2.bar(
             x_positions + offset,
             ranks,
@@ -226,7 +216,7 @@ def plot_per_problem_ranks():
         ax.spines['left'].set_color('#94A3B8')
         ax.spines['bottom'].set_color('#94A3B8')
 
-    plt.tight_layout(rect=[0, 0.02, 1, 0.96])
+    plt.tight_layout(rect=(0.0, 0.02, 1.0, 0.96))
 
     out_file = RESULTS_DIR / "per_problem_rank_bars.png"
     fig.savefig(out_file, dpi=300, bbox_inches='tight')
@@ -262,8 +252,8 @@ def plot_relative_score_bars():
 
         for a_idx, a in enumerate(ALGOS):
             row = p_rows[p_rows["Algorithm"] == a]
-            v_i = row["IGD_Mean"].values[0]
-            v_h = row["HV_Mean"].values[0]
+            v_i = first_value(row, "IGD_Mean")
+            v_h = first_value(row, "HV_Mean")
 
             scores_igd[p_idx, a_idx] = (min_igd / v_i * 100.0) if v_i > 0 else 0.0
             scores_hv[p_idx, a_idx] = (v_h / max_hv * 100.0) if max_hv > 0 else 0.0
@@ -285,10 +275,10 @@ def plot_relative_score_bars():
         for p_idx, bar in enumerate(bars):
             p = PROBLEMS[p_idx]
             row = df_detail[(df_detail["Problem"] == p) & (df_detail["Algorithm"] == algo)]
-            sym = row["IGD_Symbol"].values[0]
+            sym = first_value(row, "IGD_Symbol")
             sc = scores_igd[p_idx, a_idx]
 
-            tag = f"({sym})" if algo != "DSOCOL" else "(Full)"
+            tag = f"({sym})" if algo != "DSOCOL" else "(Ours)"
             label = f"{sc:.1f}%\n{tag}"
             ax1.text(
                 bar.get_x() + bar.get_width() / 2.0,
@@ -324,10 +314,10 @@ def plot_relative_score_bars():
         for p_idx, bar in enumerate(bars):
             p = PROBLEMS[p_idx]
             row = df_detail[(df_detail["Problem"] == p) & (df_detail["Algorithm"] == algo)]
-            sym = row["HV_Symbol"].values[0]
+            sym = first_value(row, "HV_Symbol")
             sc = scores_hv[p_idx, a_idx]
 
-            tag = f"({sym})" if algo != "DSOCOL" else "(Full)"
+            tag = f"({sym})" if algo != "DSOCOL" else "(Ours)"
             label = f"{sc:.1f}%\n{tag}"
             ax2.text(
                 bar.get_x() + bar.get_width() / 2.0,
@@ -351,7 +341,7 @@ def plot_relative_score_bars():
         ax.spines['left'].set_color('#94A3B8')
         ax.spines['bottom'].set_color('#94A3B8')
 
-    plt.tight_layout(rect=[0, 0.02, 1, 0.96])
+    plt.tight_layout(rect=(0.0, 0.02, 1.0, 0.96))
 
     out_file = RESULTS_DIR / "igd_hv_relative_score_bars.png"
     fig.savefig(out_file, dpi=300, bbox_inches='tight')
@@ -359,7 +349,71 @@ def plot_relative_score_bars():
     print(f"Saved: {out_file}")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(description="生成排名、显著性与相对性能柱状图。")
+    parser.add_argument(
+        "--input-dir",
+        "--results-dir",
+        dest="input_dir",
+        type=Path,
+        default=DEFAULT_RESULTS_DIR,
+        help="排名 CSV 所在目录",
+    )
+    parser.add_argument("--output-dir", type=Path, default=None, help="图片输出目录（默认与输入目录相同）")
+    parser.add_argument("--algorithms", nargs="+", default=None, help="参与绘图的算法列表")
+    parser.add_argument("--detail-file", type=Path, default=None, help="明细 CSV 文件名或路径")
+    parser.add_argument("--summary-file", type=Path, default=None, help="汇总 CSV 文件名或路径")
+    args = parser.parse_args()
+
+    input_dir = args.input_dir.expanduser()
+    output_dir = (args.output_dir or input_dir).expanduser()
+    detail_path = args.detail_file or Path("per_problem_metrics_detail.csv")
+    summary_path = args.summary_file or Path("ranking_and_pvalues_summary.csv")
+    if not detail_path.is_absolute():
+        detail_path = input_dir / detail_path
+    if not summary_path.is_absolute():
+        summary_path = input_dir / summary_path
+
+    global RESULTS_DIR, df_detail, df_summary, ALGOS, ALGO_LABELS, COLORS, EDGE_COLORS, HATCHES, PROBLEMS
+    RESULTS_DIR = output_dir
+    df_detail = pd.read_csv(detail_path)
+    df_summary = pd.read_csv(summary_path)
+    df_detail.columns = [str(column).strip() for column in df_detail.columns]
+    df_summary.columns = [str(column).strip() for column in df_summary.columns]
+    for frame in (df_detail, df_summary):
+        for column in ["Category", "Problem", "Algorithm", "Label", "IGD_Symbol", "HV_Symbol"]:
+            if column in frame:
+                frame[column] = frame[column].astype(str).str.strip()
+
+    available = list(dict.fromkeys(df_detail["Algorithm"].tolist()))
+    if args.algorithms:
+        ALGOS = args.algorithms
+    else:
+        preferred = ABLATION_ALGORITHMS if set(ABLATION_ALGORITHMS) <= set(available) else MAIN_ALGORITHMS
+        ALGOS = [algorithm for algorithm in preferred if algorithm in available] or available
+    missing = [algorithm for algorithm in ALGOS if algorithm not in available]
+    if missing:
+        raise ValueError(f"排名明细 CSV 中不存在算法: {missing}")
+
+    ALGO_LABELS = {algorithm: ALGORITHM_LABELS.get(algorithm, algorithm) for algorithm in ALGOS}
+    palette = ["#2563EB", "#64748B", "#0D9488", "#94A3B8", "#F59E0B", "#10B981", "#8B5CF6"]
+    edge_palette = ["#1E40AF", "#475569", "#0F766E", "#64748B", "#D97706", "#059669", "#7C3AED"]
+    hatch_palette = ["///", "", "..", "", "..", "\\\\\\", "xx"]
+    COLORS = {algorithm: palette[index % len(palette)] for index, algorithm in enumerate(ALGOS)}
+    EDGE_COLORS = {algorithm: edge_palette[index % len(edge_palette)] for index, algorithm in enumerate(ALGOS)}
+    HATCHES = {algorithm: hatch_palette[index % len(hatch_palette)] for index, algorithm in enumerate(ALGOS)}
+    PROBLEMS = [problem for problem in PROBLEMS if problem in set(df_detail["Problem"].tolist())]
+    if not PROBLEMS:
+        raise ValueError("排名明细 CSV 中未找到支持的 Benchmark 问题。")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"读取明细: {detail_path}")
+    print(f"读取汇总: {summary_path}")
+    print(f"算法: {ALGOS}")
     plot_overall_ranking_bars()
     plot_per_problem_ranks()
     plot_relative_score_bars()
+
+
+if __name__ == "__main__":
+    main()
