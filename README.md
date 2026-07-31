@@ -54,8 +54,6 @@ COL-CMOP/
 │   └── run_test.py             # 通用算法与 Benchmark 测试/演示入口 (支持多算法与多问题, 不保存结果)
 │
 ├── results/                    # [实验结果持久化存储]
-│   ├── detailed_runs.csv       # 多 Seed 运行明细表
-│   └── summary_metrics.csv     # 算法对比统计汇总表 (mean ± std)
 ```
 
 ---
