@@ -32,7 +32,7 @@ The remainder of this article is organized as follows: Section II reviews the re
 
 ## II. RELATED WORK
 
-## A. Preliminaries
+### A. Preliminaries
 
 A CMOP can be mathematically denoted as follows: 
 
@@ -50,7 +50,7 @@ $\begin{array} { r } { C V ( \mathbf { x } ) = 0 } \end{array}$ means x is a fea
 
 For any two solutions, x is said to Pareto dominate y (notated as $\underline { { \textbf { x } \prec \textbf { y } } }$ if x is no worse than y regarding all objective components and outperforms y in at least one. z is an unconstrained Pareto optimal solution if z is not dominated by any other candidate x within the entire search space. The aggregate of these solutions is termed the unconstrained Pareto optimal set (UPS). Similarly, a feasible solution z (where $C V ( { \bf z } ) ~ = ~ 0 )$ is defined as a constrained Pareto optimal solution if no other feasible solution x can dominate it. These points together constitute the constrained Pareto optimal set (CPS). The projections of the UPS and CPS onto the objective space are designated as the unconstrained Pareto front (UPF) and the CPF, respectively. 
 
-## B. Existing CMOEAs
+### B. Existing CMOEAs
 
 Over the past few decades, many CMOEAs have been proposed to solve the challenge of balancing convergence, feasibility, and diversity. Based on their underlying CHTs, these existing approaches can be broadly categorized into the following groups. 
 
@@ -74,7 +74,7 @@ Remarks: To retain the synergistic benefits of multipopulation interaction while
 
 ## III. THE PROPOSED METHOD
 
-## A. Procedure of DSOCOL
+### A. Procedure of DSOCOL
 
 Algorithm 1 provides the detailed explanation of DSOCOL. The maximum generation T and swarm size N are input. The algorithm starts by evolving two different swarms $S _ { 1 }$ and $S _ { 2 }$ (line 1). Afterwards, the evolutionary generation counter t and the number of niches K are initialized (line 2). The COL strategy is configured to execute every 75 generations, and the initial value for constraint relaxation $\varepsilon _ { m a x }$ is set to the maximum constraint violation degree in the initial population (line 3). K uniformly weighted vectors V are initialized (line 4). We adopt the fitness evaluation functions of SPEA2 [35] in this research, which can be represented as Eq. (3). It is worth noting that when $\varepsilon = 0 ,$ , this strategy is equivalent to CDP. In line $5 , S _ { 1 }$ is evaluated under constrained relaxation $\varepsilon ( t )$ to traverse infeasible regions and enhance global exploration. In contrast, $\varepsilon$ for $S _ { 2 }$ is set to 0, thereby allowing the population to enter the feasible region and enhance diversity exploitation along the CPF (line 6). The main loop runs until the computational resources are exhausted (lines 7-20). 
 
@@ -189,7 +189,7 @@ Output: O (offspring swarm)
 
 $\underline { { \varepsilon } } _ { \mathrm { m a x } }$ is determined by the highest constraint violation value in the initial population; α is set to 0.95; $f _ { r }$ represents the feasible ratio. 
 
-## B. Collaborative Orthogonal Learning
+### B. Collaborative Orthogonal Learning
 
 Unlike traditional collaboration frameworks that rely on sharing solution information, COL facilitates a convergence direction synergy between the two swarms, which is achieved through two distinct yet complementary mechanisms. Algorithm 3 provides the details. The COL process is executed within each niche (lines 2-24). Specifically, for $S _ { 1 }$ , the process begins by identifying candidate solutions associated with the i-th niche (lines 3-4). Subsequently, these candidates are categorized into a feasible non-dominated set and a remaining set (line 5). If both sets are non-empty, a representative solution is randomly selected from each set (line 7). Otherwise, the candidates are sorted based on constraint violation and divided into two sets at the median value, from which one representative solution is selected respectively (lines 8-11). Upon determining the representative solutions, the trend learning strategy is executed by $\underline { { \mathrm { E q . } } }$ (8) to extract the promising convergence direction, which is then utilized to generate the new experimental solutions (line 12). 
 
@@ -265,7 +265,7 @@ For a clearer understanding of the proposed collaborative orthogonal learning st
 
 In contrast, Fig. 1(b) illustrates the orthogonal learning process of the auxiliary swarm $( S _ { 2 } )$ . Through the knowledge transfer, the convergence directions identified by $S _ { 1 }$ are inherited by $S _ { 2 }$ (shown as the blue dashed lines). The selected representative solution $\mathbf { x } _ { b }$ then serves as a pivot to orthogonalize these inherited directions, yielding the complementary search directions (indicated by the purple solid lines). Similarly, $S _ { 2 }$ learns these complementary search directions, which demonstrates that $S _ { 2 }$ focuses on exploring the complementary subspace to the main trend, thereby avoiding redundant searches and enhancing diversity along the CPS. It is worth noting that $\mathbf { x } _ { b }$ is selected as the solution closest to the CPF within its niche. This implies that $\mathbf { x } _ { b }$ is likely situated in close proximity to the CPS in the decision space. Selecting these solutions as positional anchors aims to maximize the probability that the determined orthogonal directions cover the CPS, thereby effectively expanding the distribution range of the solutions. 
 
-## C. Niche-Guided Subset Selection
+### C. Niche-Guided Subset Selection
 
 To better decouple the tasks of approximating the feasible region and distributing along the CPF, $ { \boldsymbol { S } } _ { 1 }$ and $S _ { 2 }$ are assigned different strategies for environmental selection. Specifically, $S _ { 1 }$ utilizes the "Environmental Selection()" procedure, as outlined in Algorithm 4, to select the next generation. The fitness evaluation is determined by ε (lines 2). Then, the next generation is selected based on the evaluated fitness values, and their fitness values are output (line 3-11). This simple environmental selection strategy is widely used in CMOEAs [37] to increase the selection pressure on $S _ { 1 }$ and thus accelerate convergence. 
 
@@ -362,13 +362,13 @@ favored objective regions.
 
 Fig. 2(c) depicts the third-level subset division. The solutions in Φ<sup>rem</sup> are also categorized into niches: $\Phi _ { 1 } ^ { r e m } = $ $\{ x _ { 4 } , x _ { 5 } , x _ { 1 0 } \} , \Phi _ { 2 } ^ { r e m } = \{ x _ { 2 } , x _ { 6 } , . . . , x _ { 1 2 } \}$ , and $\Phi _ { 3 } ^ { r e m } = \{ x _ { 9 } \}$ Then the sparse niches are filled (where size $< L )$ . Specifically, for the empty $\Phi _ { 1 } ^ { n f }$ , solutions $x _ { 4 }$ and $x _ { 5 }$ are selected from $\Phi _ { 1 } ^ { r e m }$ based on CDP. For the empty $\Phi _ { 3 } ^ { n f }$ $x _ { 9 }$ from $\Phi _ { 3 } ^ { r e m }$ is added first. Since it still requires one more solution, $x _ { 8 }$ is selected from the remaining candidates due to its smaller angular distance to $V ^ { 3 }$ . Finally, the updated niches are $\Phi _ { 1 } ^ { n f } = \{ \bar { x _ { 4 } } , x _ { 5 } \} , \Phi _ { 2 } ^ { n f } = \{ x _ { 1 } , x _ { 3 } \}$ , and $\Phi _ { 3 } ^ { n f } \dot { { \bf \Phi } } = \{ x _ { 8 } , x _ { 9 } \}$ . The third level ensures that the swarm does not exhibit preferential search for specific niches. In summary, the proposed NGSS strategy aims to uniformly search the objective space while ensuring a degree of convergence pressure, thereby enhancing the ability to capture discrete CPFs. 
 
-## D. Computational Complexity
+### D. Computational Complexity
 
 For DSOCOL, the time complexity of parameter and swarm initialization is $O ( M N )$ and $O ( D N )$ , respectively. The complexity of the swarm update including the COL strategy is dominated by $O ( M N ^ { 2 } )$ . The time complexity of environmental selection for the main swarm is $O ( N ^ { 3 } )$ , primarily attributed to the truncation strategy of SPEA2. The time complexity of the NGSS strategy for the auxiliary swarm is $O ( M N ^ { 2 } + D N )$ ). As a result, the overall computational complexity of DSOCOL in the worst case is $O ( N ^ { 3 } )$ . Due to space limitations, a detailed computational complexity analysis is provided in Supp-Section III of the Supplementary Files. 
 
 ## IV. EXPERIMENTAL STUDIES
 
-## A. Experimental Settings
+### A. Experimental Settings
 
 1) Benchmark Instances: To measure the overall performance of the proposed DSOCOL in addressing problems with varying landscape, we conducted comprehensive experiments on 33 CMOP instances belonging to DAS-CMOPs [38], C-DTLZ [39], DC-DTLZ [40] and LIR-CMOPs [41]. Beyond the standard settings with decision variables $D < 1 0 0$ , we further extended these four benchmarks to large-scale configurations (D = 500 and D = 1000) to verify the algorithm’s efficacy in high-dimensional search spaces. Furthermore, a specific test suite named FCPs [42] was introduced to assess the robustness of DSOCOL against deceptive constraints. All experiments were performed on PlatEMO [43]. 
 
@@ -378,7 +378,7 @@ For DSOCOL, the time complexity of parameter and swarm initialization is $O ( M 
 
 4) Performance Indicators: To clarify the performance of the methods, we use two popular performance metrics: Inverted Generation Distance (IGD) [50] and Hypervolume (HV) [51]. The Subsection II of the Supplementary Files provides specific information and formulas for these two indicators. In addition, the performance indicator results were statistically analyzed using KEEL software [52] at a significance level of 0.05. Based on the Wilcoxon analysis, the notations $^ { \prime \prime } { + ^ { \prime \prime } } ,$ $U { \mathrm { - } } ^ { \prime \prime } , \mathrm { a n d } ^ { \prime \prime } \approx ^ { \prime \prime }$ signify that the performance of the comparative algorithm is significantly superior to, inferior to, or statistically indistinguishable from DSOCOL. Furthermore, “NaN” implies that the algorithm failed to find any feasible solution. 
 
-## B. Comparison Studies
+### B. Comparison Studies
 
 1) Comparison on Standard CMOPs: To comprehensively assess the performance of DSOCOL on standardscale CMOPs, the proposed DSOCOL is compared with nine state-of-the-art CMOEAs and the statistical results on four benchmark suites with the standard dimensions are presented in Tables S-V and S-VI of the Supplementary Files, respectively. For a more intuitive view, we summarize all the results in Table I. In terms of IGD, DSOCOL demonstrated significant performance advantages over the comparison methods on 19 of the 33 problems. DVCEA achieved the best results in six instances. Concerning HV, DSOCOL outperformed APSEA, C3M, CMOEMT, DRLOS-EMCMO, IM-C-MOEA/D, CMOCSO, DVCEA, LCMEA and POCEA in 25, 31, 17, 22, 32, 16, 18, 32 and 33 of the 33 instances. The reasons for the poor performance of these comparison algorithms can be analyzed as follows. 
 
@@ -430,7 +430,7 @@ AVERAGE RANKINGS AND p-VALUES OF IGD AND HV BY THE FRIEDMAN TEST OF DSOCOL AND O
 
 3) Comparison on Special CMOPs: To further evaluate the robustness of DSOCOL, we conducted experiments on the FCP benchmark suite with special difficulties. Distinct from conventional benchmarks, the FCP series initializes the population in the transition zone between the UPF and the CPF. A defining characteristic of this suite is the presence of fraudulent constraints, where the constraint violation degrees exhibit non-monotonicity. These deceptive landscapes act as evolutionary traps, requiring algorithms to maintain individuals with suboptimal objective values and lower feasibility to traverse the fraudulent regions. The statistical IGD and HV results on FCP1-5 are summarized in Tables S-IX and S-X of the Supplementary Files, with Fig. S-6 visualizing the final solution distribution on FCP4. It is evident that among all compared methods, only LCMEA, which utilizes a sampling approach, managed to yield feasible solutions across all problems. Nevertheless, DSOCOL got the best results on four out of five instances. Conversely, all other competing algorithms failed to identify any feasible regions on FCP1-4. This is because these methods prioritize constraint satisfaction or objective optimization and perform knowledge transfer solely based on positional information of solutions. Consequently, they failed to fully explore the objective space, leading to their failure to handle problems with deceptive constraints. These results further verify that the proposed strategies can effectively handle CMOPs with diverse landscapes. 
 
-## C. Ablation Studies
+### C. Ablation Studies
 
 In this section, we set up five variants to further confirm the effectiveness and necessity of the different components. 
 
@@ -522,20 +522,17 @@ AVERAGE RANKINGS AND p-VALUES OF DSOCOL AND FIVE VARIANTS BY THE FRIEDMAN TEST O
 
 In addition, it is worth noting that DSOCOL4 obtained a worse ranking than DSOCOL3. Although DSOCOL3 did not incorporate the COL strategy, it was still able to achieve gradual convergence by relying on the environmental selection mechanism. In contrast, the COL strategy in DSOCOL4 only included orthogonal learning without trend learning, which caused the population to consume additional function evaluations to explore complementary regions via orthogonal learning when it was unable to converge rapidly toward the CPF. Under such slow convergence conditions, further intensifying the exploration of complementary regions to enhance diversity became detrimental to overall performance, ultimately leading DSOCOL4 to achieve the worst ranking among the compared variants. This result also indirectly verified that the search directions explored by orthogonal learning are different from and complementary to the evolutionary directions identified by trend learning for rapid convergence, indicating that the COL strategy can achieve its best performance only when orthogonal learning and trend learning operate in a coordinated manner to properly balance convergence and diversity. 
 
-## D. Parameter Analysis
+### D. Parameter Analysis
 
 DSOCOL involves two parameters: the execution frequency of the COL strategy $( T _ { C O L } )$ and the number of niches (K). Detailed statistical results for IGD and HV are provided in Table S-XIII and S-XIV of the Supplementary Files. In this study, $T _ { C O L }$ and K are set to 75 and $\lfloor \frac { N } { 1 0 } \rfloor$ , respectively. Due to space limitations, a detailed analysis regarding the characteristics and sensitivity of these two parameters is provided in Supp-Section V of the Supplementary Files. 
 
-## E. Real-World Application
+### E. Real-World Application
 
 In contrast to the previous benchmark suite instances, realworld CMOPs (RWCMOPs) show distinct characteristics. To evaluate DSOCOL’s performance in practical applications, we further compared the performance of DSOCOL with the nine comparison algorithms in ten real-world applications in four different domains, which are as follows. 
 
 • Mechanical Design Problem: Pressure Vessel Design [53], Four Bar Plane Truss [54], Front Rail Design [55]. 
-
 • Chemical Engineering Problems: Heat Exchanger Network Design [56], Reactor Network Design [57]. 
-
 • Process and Synthesis Problems: Process Design Problem [58], Process Synthesis Problem [59], Process Flow Sheeting Problem [60]. 
-
 • Power Electronics Problems: Synchronous Optimal Pulse-width Modulation of 3-level Inverters [61], Synchronous Optimal Pulse-width Modulation of 7-level Inverters [62]. 
 
 Since the true CPFs of these real-world applications are not known, we use the HV indicator to measure the performance of CMOEAs. Compared to the previous benchmark instances, these RWCMOPs are more challenging in several respects. First, the objective functions in practical problems may exhibit significantly different numerical scales, making it difficult for an algorithm to establish a credible boundary without sufficient convergence pressure. Second, these applications may involve highly nonlinear constraints and irregular Pareto front, under which the population can easily be trapped in local feasible regions or even fail to obtain feasible solutions. Third, some real-world problems are also associated with large or strongly coupled search spaces, which further increases the difficulty of locating high-quality feasible regions efficiently. Under such conditions, the advantage of DSOCOL lies in its ability to simultaneously ensure convergence reliability and distribution quality. Specifically, the COL strategy enables the main swarm to learn promising evolutionary directions and maintain sufficient convergence pressure to approach a reliable objective boundary, while the auxiliary swarm explores complementary subspaces to reduce redundant search. In addition, the NGSS strategy helps preserve uniformity in the objective space, which is particularly important when the practical Pareto front is irregular or partially disconnected. As shown in Table V, our proposed method achieves the overall highest quality results in these practical applications, with DVCEA following closely. The results validate that DSOCOL successfully maintains a balance between convergence, feasibility, and diversity, even in the context of RWCMOPs. In general, the superior or competitive performance of DSOCOL in solving real-world applications is demonstrated, compared with other methods. 
@@ -543,10 +540,7 @@ Since the true CPFs of these real-world applications are not known, we use the H
 
 TABLE V
 
-
-
 THE MEDIAN HV RESULTS OBTAINED BY DSOCOL AND ALL COMPARISON ALGORITHMS ON TEN RWCMOPS AMONG 30 RUNS. THE BEST RESULT IN EACH ROW IS HIGHLIGHTED
-
 
 <table><tr><td>Problem</td><td>APSEA</td><td>C3M</td><td>CMOEMT</td><td>DRLOS-EMCMO</td><td>IM-C-MOEA/D</td><td>CMOCSO</td><td>DVCEA</td><td>LCMEA</td><td>POCEA</td><td>DSOCOL</td></tr><tr><td>Pressure Vessel Design</td><td>6.0454e-1 (9.59e-4) -</td><td>6.0138e-1 (2.68e-3) -</td><td>5.9416e-1 (2.07e-3) -</td><td>6.0514e-1 (9.75e-4) -</td><td>5.8511e-1 (6.09e-3) -</td><td>5.4646e-1 (4.50e-2) -</td><td>6.0601e-1 (3.80e-4) ≈</td><td>6.0205e-1 (2.11e-3) -</td><td>5.8100e-1 (7.75e-3) -</td><td>6.0603e-1 (8.24e-4)</td></tr><tr><td>Four Bar Plane Truss</td><td>4.0936e-1 (1.75e-4) -</td><td>4.0956e-1 (1.29e-4) -</td><td>4.0943e-1 (1.13e-4) -</td><td>4.0972e-1 (8.71e-5) ≈</td><td>4.0196e-1 (1.84e-3) -</td><td>4.0962e-1 (1.27e-4) -</td><td>4.0939e-1 (1.59e-4) -</td><td>4.1020e-1 (1.02e-4) +</td><td>3.3625e-1 (1.22e-2) -</td><td>4.0970e-1 (7.78e-5)</td></tr><tr><td>Front Rail Design</td><td>4.0505e-2 (5.44e-6) ≈</td><td>4.0508e-2 (4.01e-6) ≈</td><td>4.0509e-2 (4.59e-6) ≈</td><td>4.0504e-2 (6.29e-6) ≈</td><td>3.9969e-2 (2.10e-4) -</td><td>4.0508e-2 (5.64e-6) ≈</td><td>4.0506e-2 (1.52e-5) ≈</td><td>4.0492e-2 (3.38e-5) ≈</td><td>4.0323e-2 (5.99e-5) -</td><td>4.0510e-2 (4.57e-6)</td></tr><tr><td>Heat Exchanger Ntweork Design</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>1.0000e+0 (0.00e+0) -</td><td>8.3095e-1 (3.37e-1) -</td><td>2.0000e-1 (4.47e-1) -</td><td>5.0364e+4 (7.12e+4)</td></tr><tr><td>Reactor Network Design</td><td>NaN (NaN) -</td><td>1.8758e+0 (3.50e+0) ≈</td><td>9.9451e-1 (9.19e-3) ≈</td><td>8.3152e-1 (2.51e-1) -</td><td>NaN (NaN) -</td><td>9.9856e-1 (0.00e+0) ≈</td><td>9.3315e-1 (7.21e-2) -</td><td>7.0574e-1 (2.92e-1) -</td><td>1.0365e+0 (1.56e-1) -</td><td>3.4847e+0 (6.12e+0)</td></tr><tr><td>Process Design Problem</td><td>1.3839e-1 (2.77e-2) ≈</td><td>1.4523e-1 (6.23e-3) +</td><td>1.4802e-1 (2.67e-2) ≈</td><td>1.4537e-1 (1.03e-2) +</td><td>1.8376e-1 (2.07e-2) +</td><td>9.8472e-2 (1.35e-2) -</td><td>1.3715e-1 (1.09e-2) ≈</td><td>1.2306e-1 (2.81e-2) -</td><td>1.3076e-1 (3.21e-2) ≈</td><td>1.3543e-1 (1.63e-2)</td></tr><tr><td>Process Synthesis Problem</td><td>7.6198e-1 (1.93e-2) -</td><td>7.6952e-1 (7.32e-3) -</td><td>7.5167e-1 (2.88e-2) -</td><td>7.72851e-1 (4.96e-3) -</td><td>6.9682e-1 (1.00e-1) -</td><td>6.2336e-1 (5.38e-2) -</td><td>7.8209e-1 (2.69e-3) ≈</td><td>7.2110e-1 (7.74e-2) -</td><td>3.3347e-1 (2.35e-1) -</td><td>7.8294e-1 (2.19e-3)</td></tr><tr><td>Process Flow Sheeting Problem</td><td>7.6198e-1 (1.93e-2) -</td><td>7.6952e-1 (7.32e-3) -</td><td>7.5167e-1 (2.88e-2) -</td><td>7.7851e-1 (4.96e-3) -</td><td>6.9682e-1 (1.00e-1) -</td><td>6.2336e-1 (5.38e-2) -</td><td>7.8209e-1 (2.69e-3) -</td><td>7.2110e-1 (7.74e-2) -</td><td>3.3347e-1 (2.35e-1) -</td><td>7.8606e-1 (1.17e-3)</td></tr><tr><td>Synchronous Optimal Pulse-width Modulation of 3-level Inverters</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>1.8821e-1 (1.95e-1) ≈</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>4.8626e-1 (3.10e-1)</td></tr><tr><td rowspan="2">Synchronous Optimal Pulse-width Modulation of 7-level Inverters</td><td>7.7564e-1 (4.57e-2) +/-/-/-/-</td><td>5.9497e-1 (2.33e-1) ≈</td><td>6.6799e-1 (2.22e-1) +</td><td>7.6749e-1 (5.34e-2) +</td><td>6.0888e-1 (3.05e-1) ≈</td><td>5.6533e-1 (3.54e-1) ≈</td><td>7.6420e-1 (5.20e-2) +</td><td>5.4489e-1 (1.60e-1) ≈</td><td>2.9724e-1 (3.10e-1) -</td><td>4.9731e-1 (1.74e-1)</td></tr><tr><td>1/7/2</td><td>1/6/3</td><td>1/6/3</td><td>2/6/2</td><td>1/8/1</td><td>0/7/3</td><td>1/4/5</td><td>1/7/2</td><td>0/9/1</td><td></td></tr></table>
 
@@ -558,444 +552,70 @@ THE MEDIAN HV RESULTS OBTAINED BY DSOCOL AND ALL COMPARISON ALGORITHMS ON TEN RW
 
 In this paper, we proposed a dual-swarm evolutionary algorithm with collaborative orthogonal learning, named DSO-COL, to effectively balance feasibility, convergence and diversity in constrained multi-objective optimization with complex landscapes. Unlike conventional collaborative frameworks that primarily exchange solution coordinates, DSOCOL incorporates evolutionary direction learning into the collaborative paradigm. The main swarm identifies promising convergence directions and transfers them as reusable search experience to the auxiliary swarm, enabling rapid convergence toward the CPF and achieving uniform search of the CPF. The primary contribution is the geometric synergy between trend learning and orthogonal learning. Specifically, trend learning drives rapid convergence toward the CPF, whereas orthogonal learning explores the orthogonal complement of the convergence direction, thereby reducing redundant searches and broadening the solution distribution. Moreover, the proposed NGSS strategy employs a three-level subset division mechanism to enable the preferential exploration of sparse niches, ensuring uniform distribution within the objective space. 
 
-Extensive results on 33 benchmark instances and 10 realworld problems demonstrate significant improvements in both convergence and distribution, including large-scale cases. In practical applications such as pressure vessel design and reactor network design, DSOCOL provides decision-makers with a well-converged and well-distributed set of trade-off solutions, facilitating more informed trade-off decisions in real-world cases with nonlinear constraints. Despite these advancements, extending the collaborative learning paradigm to constrained many-objective optimization problems (CMaOPs, M > 3) 
-
-remains challenging, as traditional Pareto dominance-based selection mechanisms perform poorly in this scenario. Future research will investigate performing orthogonal searches on Cartesian products to address the exponential growth in the cardinality of non-dominated solution sets in CMaOPs [63]. By reducing the challenge from an exponential to a polynomial complexity, it is promising to expand DSOCOL into CMaOPs. 
+Extensive results on 33 benchmark instances and 10 realworld problems demonstrate significant improvements in both convergence and distribution, including large-scale cases. In practical applications such as pressure vessel design and reactor network design, DSOCOL provides decision-makers with a well-converged and well-distributed set of trade-off solutions, facilitating more informed trade-off decisions in real-world cases with nonlinear constraints. Despite these advancements, extending the collaborative learning paradigm to constrained many-objective optimization problems (CMaOPs, M > 3) remains challenging, as traditional Pareto dominance-based selection mechanisms perform poorly in this scenario. Future research will investigate performing orthogonal searches on Cartesian products to address the exponential growth in the cardinality of non-dominated solution sets in CMaOPs [63]. By reducing the challenge from an exponential to a polynomial complexity, it is promising to expand DSOCOL into CMaOPs. 
 
 ## REFERENCES
 
-
-
-[1] R. Li, L. Wang, H. Sang, and L. Yao, “Knowledge-guided multiview hierarchical evolutionary algorithm for flexible job shop scheduling with finite skilled workers,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 55, no. 10, pp. 7259–7272, 2025. 
-
-
-
-
-
-[2] Y. Shan, X.-P. Xie, and Z. Mao, “Co-design of a switching-type control scheme for nonlinear networked systems with protocol-based communication and its application to circuits,” IEEE Transactions on Automation Science and Engineering, vol. 22, pp. 5828–5840, 2025. 
-
-
-
-
-
-[3] T. Zhang, D. Li, Y. Li, and W. Gong, “Constrained multitasking optimization via co-evolution and domain adaptation,” Swarm and Evolutionary Computation, vol. 87, p. 101570, 2024. 
-
-
-
-
-
-[4] F. Ming, W. Gong, B. Xue, M. Zhang, and Y. Jin, “Automated configuration of evolutionary algorithms via deep reinforcement learning for constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 55, no. 12, pp. 5877–5890, 2025. 
-
-
-
-
-
-[5] J. Liu, Y. Wang, G. Sun, and T. Pang, “Constrained evolutionary bayesian optimization for expensive constrained optimization problems with inequality constraints,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 55, no. 3, pp. 2009–2021, 2025. 
-
-
-
-
-
-[6] K. Yu, F. Chen, M. Yu, J. Liang, and K. Chen, “Modal detection informed classification evaluation via ensemble networks for expensive constrained multimodal optimization,” IEEE Transactions on Neural Networks and Learning Systems, pp. 1–15, 2025. 
-
-
-
-
-
-[7] H. Wu, Q. Chen, J. Chen, Y. Jin, J. Ding, X. Zhang, and T. Chai, “A multistage expensive constrained multiobjective optimization algorithm based on ensemble infill criterion,” IEEE Transactions on Evolutionary Computation, vol. 29, no. 6, pp. 2357–2371, 2025. 
-
-
-
-
-
-[8] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan, “A fast and elitist multiobjective genetic algorithm: NSGA-II,” IEEE Transactions on Evolutionary Computation, vol. 6, no. 2, pp. 182–197, 2002. 
-
-
-
-
-
-[9] Q. Zhu, Q. Zhang, and Q. Lin, “A constrained multiobjective evolutionary algorithm with detect-and-escape strategy,” IEEE Transactions on Evolutionary Computation, vol. 24, no. 5, pp. 938–947, Oct. 2020. 
-
-
-
-
-
-[10] Z. Fan, H. Li, C. Wei, W. Li, H. Huang, X. Cai, and Z. Cai, “An improved epsilon constraint handling method embedded in moea/d for constrained multi-objective optimization problems,” in 2016 IEEE Symposium Series on Computational Intelligence (SSCI), 2016, pp. 1–8. 
-
-
-
-
-
-[11] F. Ming, W. Gong, L. Wang, and L. Gao, “Constrained multiobjective optimization via multitasking and knowledge transfer,” IEEE Transactions on Evolutionary Computation, vol. 28, no. 1, pp. 77–89, 2024. 
-
-
-
-
-
-[12] Z. Sun, H. Ren, G. G. Yen, T. Chen, J. Wu, H. An, and J. Yang, “An evolutionary algorithm with constraint relaxation strategy for highly constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 53, no. 5, pp. 3190–3204, 2023. 
-
-
-
-
-
-[13] K. Qiao, K. Yu, B. Qu, J. Liang, H. Song, and C. Yue, “An evolutionary multitasking optimization framework for constrained multiobjective optimization problems,” IEEE Transactions on Evolutionary Computation, vol. 26, no. 2, pp. 263–277, 2022. 
-
-
-
-
-
-[14] J. Wang, G. Liang, and J. Zhang, “Cooperative differential evolution framework for constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 49, no. 6, pp. 2060–2072, 2019. 
-
-
-
-
-
-[15] Z. Fan, W. Li, X. Cai, H. Li, C. Wei, Q. Zhang, K. Deb, and E. Goodman, “Push and pull search for solving constrained multi-objective optimization problems,” Swarm and Evolutionary Computation, vol. 44, pp. 665– 679, 2019. 
-
-
-
-
-
-[16] W.-Q. Ying, W.-P. He, Y.-X. Huang, D.-T. Li, and Y. Wu, “An adaptive stochastic ranking mechanism in moea/d for constrained multi-objective optimization,” in 2016 International Conference on Information System and Artificial Intelligence (ISAI), 2016, pp. 514–518. 
-
-
-
-
-
-[17] M. A. Jan and R. A. Khanum, “A study of two penalty-parameterless constraint handling techniques in the framework of moea/d,” Applied Soft Computing, vol. 13, no. 1, pp. 128–148, 2013. 
-
-
-
-
-
-[18] Q. Gu, Q. Wang, N. N. Xiong, S. Jiang, and L. Chen, “Surrogate-assisted evolutionary algorithm for expensive constrained multi-objective discrete optimization problems,” Complex & Intelligent Systems, vol. 8, pp. 2699 – 2718, 2021. 
-
-
-
-
-
-[19] Z.-Z. Liu, Y. Wang, and B.-C. Wang, “Indicator-based constrained multiobjective evolutionary algorithms,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 51, no. 9, pp. 5414–5426, 2021. 
-
-
-
-
-
-[20] Z. Ma and Y. Wang, “Shift-based penalty for evolutionary constrained multiobjective optimization and its application,” IEEE Transactions on Cybernetics, vol. 53, no. 1, pp. 18–30, 2023. 
-
-
-
-
-
-[21] L. Jiao, J. Luo, R. Shang, and F. Liu, “A modified objective function method with feasible-guiding strategy to solve constrained multiobjective optimization problems,” Applied Soft Computing, vol. 14, pp. 363–380, 2014. 
-
-
-
-
-
-[22] K. Yu, J. Liang, B. Qu, Y. Luo, and C. Yue, “Dynamic selection preference-assisted constrained multiobjective differential evolution,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 52, no. 5, pp. 2954–2965, 2022. 
-
-
-
-
-
-[23] F. Vaz, Y. Lavinas, C. Aranha, and M. Ladeira, “Exploring constraint handling techniques in real-world problems on moea/d with limited budget of evaluations,” in Evolutionary Multi-Criterion Optimization, H. Ishibuchi, Q. Zhang, R. Cheng, K. Li, H. Li, H. Wang, and A. Zhou, Eds. Cham: Springer International Publishing, 2021, pp. 555–566. 
-
-
-
-
-
-[24] Y. Tian, Y. Zhang, Y. Su, X. Zhang, K. C. Tan, and Y. Jin, “Balancing objective optimization and constraint satisfaction in constrained evolutionary multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 52, no. 9, pp. 9559–9572, 2022. 
-
-
-
-
-
-[25] Y. Xiang, X. Yang, H. Huang, and J. Wang, “Balancing constraints and objectives by considering problem types in constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 53, no. 1, pp. 88–101, 2023. 
-
-
-
-
-
-[26] B. Liu, H. Ma, X. Zhang, and Y. Zhou, “A memetic co-evolutionary differential evolution algorithm for constrained optimization,” in 2007 IEEE Congress on Evolutionary Computation, 2007, pp. 2996–3002. 
-
-
-
-
-
-[27] Y. Yang, J. Liu, and S. Tan, “A partition-based constrained multiobjective evolutionary algorithm,” Swarm and Evolutionary Computation, vol. 66, p. 100940, 2021. 
-
-
-
-
-
-[28] F. Ming, W. Gong, D. Li, L. Wang, and L. Gao, “A competitive and cooperative swarm optimizer for constrained multiobjective optimization problems,” IEEE Transactions on Evolutionary Computation, vol. 27, no. 5, pp. 1313–1326, 2023. 
-
-
-
-
-
-[29] X. Yu, X. Yu, Y. Lu, G. G. Yen, and M. Cai, “Differential evolution mutation operators for constrained multi-objective optimization,” Applied Soft Computing, vol. 67, pp. 452–466, 2018. 
-
-
-
-
-
-[30] F. Ming, W. Gong, L. Wang, and Y. Jin, “Constrained multi-objective optimization with deep reinforcement learning assisted operator selection,” IEEE/CAA Journal of Automatica Sinica, vol. 11, no. 4, pp. 919–931, 2024. 
-
-
-
-
-
-[31] M. Miyakawa, K. Takadama, and H. Sato, “Directed mating using inverted pbi function for constrained multi-objective optimization,” in 2015 IEEE Congress on Evolutionary Computation (CEC), 2015, pp. 2929–2936. 
-
-
-
-
-
-[32] C. He, R. Cheng, Y. Tian, X. Zhang, K. C. Tan, and Y. Jin, “Paired offspring generation for constrained large-scale multiobjective optimization,” IEEE Transactions on Evolutionary Computation, vol. 25, no. 3, pp. 448–462, 2021. 
-
-
-
-
-
-[33] A. Gupta, Y.-S. Ong, and L. Feng, “Insights on transfer optimization: Because experience is the best teacher,” IEEE Transactions on Emerging Topics in Computational Intelligence, vol. 2, no. 1, pp. 51–64, 2018. 
-
-
-
-
-
-[34] K. Qiao, K. Yu, B. Qu, J. Liang, H. Song, C. Yue, H. Lin, and K. C. Tan, “Dynamic auxiliary task-based evolutionary multitasking for constrained multiobjective optimization,” IEEE Transactions on Evolutionary Computation, vol. 27, no. 3, pp. 642–656, 2023. 
-
-
-
-
-
-[35] E. Zitzler, M. Laumanns, and L. Thiele, “Spea2: Improving the strength pareto evolutionary algorithm,” TIK-Report, vol. 103, 07 2001. 
-
-
-
-
-
-[36] R. Cheng and Y. Jin, “A competitive swarm optimizer for large scale optimization,” IEEE Transactions on Cybernetics, vol. 45, no. 2, pp. 191–204, 2015. 
-
-
-
-
-
-[37] K. Qiao, J. Liang, K. Yu, X. Ban, C. Yue, B. Qu, and P. N. Suganthan, “Constraints separation based evolutionary multitasking for constrained multi-objective optimization problems,” IEEE/CAA Journal ofAutomatica Sinica, vol. 11, no. 8, pp. 1819–1835, 2024. 
-
-
-
-
-
-[38] Z. Fan, W. Li, X. Cai, H. Li, C. Wei, Q. Zhang, K. Deb, and E. Goodman, “Difficulty adjustable and scalable constrained multiobjective test problem toolkit,” Evolutionary Computation, vol. 28, no. 3, pp. 339–378, 2020. 
-
-
-
-
-
-[39] H. Jain and K. Deb, “An evolutionary many-objective optimization algorithm using reference-point based nondominated sorting approach, part ii: Handling constraints and extending to an adaptive approach,” IEEE Transactions on Evolutionary Computation, vol. 18, no. 4, pp. 602–622, 2014. 
-
-
-
-
-
-[40] K. Li, R. Chen, G. Fu, and X. Yao, “Two-archive evolutionary algorithm for constrained multiobjective optimization,” IEEE Transactions on Evolutionary Computation, vol. 23, no. 2, pp. 303–315, 2019. 
-
-
-
-
-
-[41] Z. Fan, W. Li, X. Cai, H. Huang, Y. Fang, Y. Yugen, J. Mo, C. Wei, and E. Goodman, “An improved epsilon constraint-handling method in moea/d for cmops with large infeasible regions,” Soft Computing, vol. 23, pp. 12 491–12 510, 2019. 
-
-
-
-
-
-[42] J. Yuan, H. Liu, Y.-S. Ong, and Z. He, “Indicator-based evolutionary algorithm for solving constrained multiobjective optimization problems,” IEEE Transactions on Evolutionary Computation, vol. 26, no. 2, pp. 379–391, 2022. 
-
-
-
-
-
-[43] Y. Tian, R. Cheng, X. Zhang, and Y. Jin, “PlatEMO: A MATLAB platform for evolutionary multi-objective optimization,” IEEE Computational Intelligence Magazine, vol. 12, pp. 73–87, 11 2017. 
-
-
-
-
-
-[44] Y. Tian, R. Wang, Y. Zhang, and X. Zhang, “Adaptive population sizing for multi-population based constrained multi-objective optimization,” Neurocomputing, vol. 621, p. 129296, 2025. 
-
-
-
-
-
-[45] R. Sun, J. Zou, Y. Liu, S. Yang, and J. Zheng, “A multistage algorithm for solving multiobjective optimization problems with multiconstraints,” IEEE Transactions on Evolutionary Computation, vol. 27, no. 5, pp. 1207–1219, 2023. 
-
-
-
-
-
-[46] L. R. C. de Farias and A. F. R. Araújo, “An inverse modeling constrained multi-objective evolutionary algorithm based on decomposition,” 2024 IEEE International Conference on Systems, Man, and Cybernetics (SMC), pp. 3727–3732, 2024. [Online]. Available: https://api.semanticscholar.org/CorpusID:273638540 
-
-
-
-
-
-[47] X. Ban, J. Liang, K. Qiao, K. Yu, Y. Wang, J. Peng, and B. Qu, “A decision variables classification-based evolutionary algorithm for constrained multi-objective optimization problems,” IEEE/CAA Journal of Automatica Sinica, vol. 12, no. 9, pp. 1830–1849, 2025. 
-
-
-
-
-
-[48] L. Si, X. Zhang, Y. Zhang, S. Yang, and Y. Tian, “An efficient sampling approach to offspring generation for evolutionary large-scale constrained multi-objective optimization,” IEEE Transactions on Emerging Topics in Computational Intelligence, vol. 9, no. 3, pp. 2080–2092, 2025. 
-
-
-
-
-
-[49] K. Deb, R. B. Agrawal et al., “Simulated binary crossover for continuous search space,” Complex systems, vol. 9, no. 2, pp. 115–148, 1995. 
-
-
-
-
-
-[50] P. Bosman and D. Thierens, “The balance between proximity and diversity in multiobjective evolutionary algorithms,” IEEE Transactions on Evolutionary Computation, vol. 7, no. 2, pp. 174–188, 2003. 
-
-
-
-
-
-[51] E. Zitzler and L. Thiele, “Multiobjective evolutionary algorithms: a comparative case study and the strength pareto approach,” IEEE Transactions on Evolutionary Computation, vol. 3, no. 4, pp. 257–271, 1999. 
-
-
-
-
-
-[52] J. Alcalá-Fdez, L. Sánchez, S. García, M. J. del Jesus, S. Ventura, J. M. Garrell, J. Otero, C. Romero, J. Bacardit, V. M. Rivas, J. C. Fernández, and F. Herrera, “KEEL: A software tool to assess evolutionary algorithms for data mining problems,” Soft Comput., vol. 13, no. 3, pp. 307–318, 2009. 
-
-
-
-
-
-[53] B. Kannan and S. N. Kramer, “An augmented lagrange multiplier based method for mixed integer discrete continuous optimization and its applications to mechanical design,” Journal of mechanical design, vol. 116, no. 2, pp. 405–411, 1994. 
-
-
-
-
-
-[54] F. Y. Cheng and X. S. Li, “A generalized center method for multiobjective optimization,” 1997. 
-
-
-
-
-
-[55] L. Fan, T. Yoshino, T. Xu, Y. Lin, and H. Liu, “A novel hybrid algorithm for solving multiobjective optimization problems with engineering applications,” Mathematical Problems in Engineering, vol. 2018, no. 1, p. 5316379, 2018. 
-
-
-
-
-
-[56] G. Guillén-Gosálbez, “A novel milp-based objective reduction method for multi-objective optimization: Application to environmental problems,” Computers & Chemical Engineering, vol. 35, no. 8, pp. 1469– 1477, 2011. 
-
-
-
-
-
-[57] H. Ryoo and N. Sahinidis, “Global optimization of nonconvex nlps and minlps with applications in process design,” Computers & Chemical Engineering, vol. 19, no. 5, pp. 551–566, 1995. 
-
-
-
-
-
-[58] G. R. Kocis and I. E. Grossmann, “Global optimization of nonconvex mixed-integer nonlinear programming (minlp) problems in process synthesis,” Industrial & engineering chemistry research, vol. 27, no. 8, pp. 1407–1421, 1988. 
-
-
-
-
-
-[59] G. Kocis and I. Grossmann, “A modelling and decomposition strategy for the minlp optimization of process flowsheets,” Computers & Chemical Engineering, vol. 13, no. 7, pp. 797–819, 1989. 
-
-
-
-
-
-[60] C. A. Floudas, Nonlinear and Mixed-Integer Optimization: Fundamentals and Applications. Oxford University Press, 11 1995. 
-
-
-
-
-
-[61] A. K. Rathore, J. Holtz, and T. Boller, “Synchronous optimal pulsewidth modulation for low-switching-frequency control of medium-voltage multilevel inverters,” IEEE Transactions on Industrial Electronics, vol. 57, no. 7, pp. 2374–2381, 2010. 
-
-
-
-
-
-[62] A. Edpuganti and A. K. Rathore, “Fundamental switching frequency optimal pulsewidth modulation of medium-voltage cascaded seven-level inverter,” IEEE Transactions on Industry Applications, vol. 51, no. 4, pp. 3485–3492, 2015. 
-
-
-
-
-
-[63] S. Y. Zeng, L. S. Kang, and L. X. Ding, “An orthogonal multi-objective evolutionary algorithm for multi-objective optimization problems with constraints,” Evolutionary Computation, vol. 12, no. 1, pp. 77–98, 2004. 
-
-
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/f4f2ce7e051052ba59f4b6a3252bbece06b503f03b82dc54e281a37430802596.jpg)
-
-
-
-Yubo Wang received the B.Sc. degree in computer science from South-Central Minzu University, Wuhan, China, in 2020. He is currently pursuing the Ph.D. degree in computer science with the School of Computer Science, China University of Geosciences, Wuhan, China.
-
-
-
-His current research interests include evolutionary multiobjective optimization methods, and their applications.
-
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/6d07abff38832ae81ede8e3a7f60a1ab91079d331e1e9eac8215ed4610c10084.jpg)
-
-
-
-Chengyu Hu received his M.S. degree in automation and control from Wuhan University of Technology in 2003 and his Ph.D. in automation control from Huazhong University of Science and Technology in 2010. He is currently a professor and vice dean at the School of Computer Science, China University of Geosciences, Wuhan, China. His research interests include evolutionary algorithms, reinforcement learning, and cloud computing.
-
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/061b497f1c33b0b3d59538feccb6a1a5ab41d81b6a11415a2229c823a804f82f.jpg)
-
-
-Xinyi Wu received the B.Sc. degree from Xidian University, Xi’an, China, in 2019 and M.Sc. degree from New York University. She is currently pursuing the Ph.D. degree in computer science with the School of Computer Science, China University of Geosciences, Wuhan, China. 
-
-Her current research interests include evolutionary multimodal and multiobjective optimization methods, and their applications. 
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/8d0a44d59b8cd2bcece6415c76fbf1801d5c477a29acb730d1c921db2968681f.jpg)
-
-
-Tingyu Zhang received the B.Sc. degree in computer science from Wuhan Institute of Technology, Wuhan, China, in 2022. He is currently pursuing the Ph.D. degree in computer science with the School of Computer Science, China University of Geosciences, Wuhan, China. 
-
-His current research interests include evolutionary multitask optimization, evolutionary multiobjective optimization, and their applications. 
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/0a85ed9feb25fa6b52a973caf053f5adcdb4bcb5cf2199882196dbdd470df1ff.jpg)
-
-
-Wenyin Gong (Senior Member, IEEE) received the B.Eng., M.Eng., and Ph.D. degrees in computer science from China University of Geosciences, Wuhan, China, in 2004, 2007, and 2010, respectively. 
-
-ences. 
-
-He is currently a Professor with School of Computer Science, China University of Geosciences, Wuhan, China. His research interests include evolutionary algorithms, evolutionary optimization, and their applications. He has published over 100 research papers in journals and international confer-
-
-He served as a referee for over 30 international journals, such as IEEE TRANSACTIONS ON EVOLUTIONARY COMPUTATION, IEEE TRANSAC-TIONS ON CYBERNETICS, IEEE TRANSACTIONS ON SYSTEMS, MAN, AND CYBERNETICS: SYSTEMS, IEEE Computational Intelligence Magazine, ACM Transactions on Intelligent Systems and Technology, Information Sciences, European Journal of Operational Research, Applied Soft Computing, Journal of Power Sources, etc. Professor Gong currently serves as Associate Editor of Swarm and Evolutionary Computation, Expert Systems with Applications, Memetic Computing, etc. 
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/9a4a5b41252fb37cc697d22154ba261a3f0607fbcca13de76e8b3e7b49dd8919.jpg)
-
-
-Xuesong Yan received the B.Eng and M.Eng degrees in computer science from the China University of Geosciences, Wuhan, China, in 2000, and 2003, respectively, and his Ph.D. degree in computer software and theory from Wuhan University in 2006. 
-
-He is currently a Professor in the School of Computer Science, China University of Geosciences, Wuhan, China. His research interests include intelligent optimization, artificial intelligence, and big data and its application. 
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/bc5530319dfc6b37061f8445d593d29787c99070bb6e89d684effb6235ad80de.jpg)
-Liang Gao (Senior Member, IEEE) received his B.Sc. degree in mechatronic engineering from Xidian University, Xi an, China, in 1996, and the Ph.D. degree in mechatronic engineering from Huazhong University of Science and Technology (HUST), Wuhan, China, in 2002. 
-He is a Professor of the Department of Industrial and Manufacturing Systems Engineering (IMSE), the Deputy Director of State Key Laboratory of Digital Manufacturing Equipment and Technology and Chairman of School of Mechanical Science and 
-
-Engineering, HUST. He was supported by the Program for New Century Excellent Talents in University in 2008 and National Science Fund for Distinguished Young Scholars of China in 2018. His research interests include intelligent optimization algorithms, big data, deep learning with theirs application in Design & Manufacturing. He published more than 450 papers indexed by SCIE, authored 13 monographs. 
-
-Professor Gao currently serves as co-Editor-in-Chief of IET Collaborative Intelligent Manufacturing, Associate Editor of Swarm and Evolutionary Computation, Journal of Industrial and Production Engineering, etc. 
+[1] R. Li, L. Wang, H. Sang, and L. Yao, “Knowledge-guided multiview hierarchical evolutionary algorithm for flexible job shop scheduling with finite skilled workers,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 55, no. 10, pp. 7259–7272, 2025.
+[2] Y. Shan, X.-P. Xie, and Z. Mao, “Co-design of a switching-type control scheme for nonlinear networked systems with protocol-based communication and its application to circuits,” IEEE Transactions on Automation Science and Engineering, vol. 22, pp. 5828–5840, 2025.
+[3] T. Zhang, D. Li, Y. Li, and W. Gong, “Constrained multitasking optimization via co-evolution and domain adaptation,” Swarm and Evolutionary Computation, vol. 87, p. 101570, 2024.
+[4] F. Ming, W. Gong, B. Xue, M. Zhang, and Y. Jin, “Automated configuration of evolutionary algorithms via deep reinforcement learning for constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 55, no. 12, pp. 5877–5890, 2025.
+[5] J. Liu, Y. Wang, G. Sun, and T. Pang, “Constrained evolutionary bayesian optimization for expensive constrained optimization problems with inequality constraints,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 55, no. 3, pp. 2009–2021, 2025.
+[6] K. Yu, F. Chen, M. Yu, J. Liang, and K. Chen, “Modal detection informed classification evaluation via ensemble networks for expensive constrained multimodal optimization,” IEEE Transactions on Neural Networks and Learning Systems, pp. 1–15, 2025.
+[7] H. Wu, Q. Chen, J. Chen, Y. Jin, J. Ding, X. Zhang, and T. Chai, “A multistage expensive constrained multiobjective optimization algorithm based on ensemble infill criterion,” IEEE Transactions on Evolutionary Computation, vol. 29, no. 6, pp. 2357–2371, 2025.
+[8] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan, “A fast and elitist multiobjective genetic algorithm: NSGA-II,” IEEE Transactions on Evolutionary Computation, vol. 6, no. 2, pp. 182–197, 2002.
+[9] Q. Zhu, Q. Zhang, and Q. Lin, “A constrained multiobjective evolutionary algorithm with detect-and-escape strategy,” IEEE Transactions on Evolutionary Computation, vol. 24, no. 5, pp. 938–947, Oct. 2020.
+[10] Z. Fan, H. Li, C. Wei, W. Li, H. Huang, X. Cai, and Z. Cai, “An improved epsilon constraint handling method embedded in moea/d for constrained multi-objective optimization problems,” in 2016 IEEE Symposium Series on Computational Intelligence (SSCI), 2016, pp. 1–8.
+[11] F. Ming, W. Gong, L. Wang, and L. Gao, “Constrained multiobjective optimization via multitasking and knowledge transfer,” IEEE Transactions on Evolutionary Computation, vol. 28, no. 1, pp. 77–89, 2024.
+[12] Z. Sun, H. Ren, G. G. Yen, T. Chen, J. Wu, H. An, and J. Yang, “An evolutionary algorithm with constraint relaxation strategy for highly constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 53, no. 5, pp. 3190–3204, 2023.
+[13] K. Qiao, K. Yu, B. Qu, J. Liang, H. Song, and C. Yue, “An evolutionary multitasking optimization framework for constrained multiobjective optimization problems,” IEEE Transactions on Evolutionary Computation, vol. 26, no. 2, pp. 263–277, 2022.
+[14] J. Wang, G. Liang, and J. Zhang, “Cooperative differential evolution framework for constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 49, no. 6, pp. 2060–2072, 2019
+[15] Z. Fan, W. Li, X. Cai, H. Li, C. Wei, Q. Zhang, K. Deb, and E. Goodman, “Push and pull search for solving constrained multi-objective optimization problems,” Swarm and Evolutionary Computation, vol. 44, pp. 665– 679, 2019.
+[16] W.-Q. Ying, W.-P. He, Y.-X. Huang, D.-T. Li, and Y. Wu, “An adaptive stochastic ranking mechanism in moea/d for constrained multi-objective optimization,” in 2016 International Conference on Information System and Artificial Intelligence (ISAI), 2016, pp. 514–518.
+[17] M. A. Jan and R. A. Khanum, “A study of two penalty-parameterless constraint handling techniques in the framework of moea/d,” Applied Soft Computing, vol. 13, no. 1, pp. 128–148, 2013.
+[18] Q. Gu, Q. Wang, N. N. Xiong, S. Jiang, and L. Chen, “Surrogate-assisted evolutionary algorithm for expensive constrained multi-objective discrete optimization problems,” Complex & Intelligent Systems, vol. 8, pp. 2699 – 2718, 2021.
+[19] Z.-Z. Liu, Y. Wang, and B.-C. Wang, “Indicator-based constrained multiobjective evolutionary algorithms,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 51, no. 9, pp. 5414–5426, 2021.
+[20] Z. Ma and Y. Wang, “Shift-based penalty for evolutionary constrained multiobjective optimization and its application,” IEEE Transactions on Cybernetics, vol. 53, no. 1, pp. 18–30, 2023.
+[21] L. Jiao, J. Luo, R. Shang, and F. Liu, “A modified objective function method with feasible-guiding strategy to solve constrained multiobjective optimization problems,” Applied Soft Computing, vol. 14, pp. 363–380, 2014.
+[22] K. Yu, J. Liang, B. Qu, Y. Luo, and C. Yue, “Dynamic selection preference-assisted constrained multiobjective differential evolution,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 52, no. 5, pp. 2954–2965, 2022.
+[23] F. Vaz, Y. Lavinas, C. Aranha, and M. Ladeira, “Exploring constraint handling techniques in real-world problems on moea/d with limited budget of evaluations,” in Evolutionary Multi-Criterion Optimization, H. Ishibuchi, Q. Zhang, R. Cheng, K. Li, H. Li, H. Wang, and A. Zhu, Eds. Cham: Springer International Publishing, 2021, pp. 555–566. 
+[24] Y. Tian, Y. Zhang, Y. Su, X. Zhang, K. C. Tan, and Y. Jin, “Balancing objective optimization and constraint satisfaction in constrained evolutionary multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 52, no. 9, pp. 9559–9572, 2022.
+[25] Y. Xiang, X. Yang, H. Huang, and J. Wang, “Balancing constraints and objectives by considering problem types in constrained multiobjective optimization,” IEEE Transactions on Cybernetics, vol. 53, no. 1, pp. 88–101, 2023.
+[26] B. Liu, H. Ma, X. Zhang, and Y. Zhou, “A memetic co-evolutionary differential evolution algorithm for constrained optimization,” in 2007 IEEE Congress on Evolutionary Computation, 2007, pp. 2996–3002.
+[27] Y. Yang, J. Liu, and S. Tan, “A partition-based constrained multiobjective evolutionary algorithm,” Swarm and Evolutionary Computation, vol. 66, p. 100940, 2021.
+[28] F. Ming, W. Gong, D. Li, L. Wang, and L. Gao, “A competitive and cooperative swarm optimizer for constrained multiobjective optimization problems,” IEEE Transactions on Evolutionary Computation, vol. 27, no. 5, pp. 1313–1326, 2023.
+[29] X. Yu, X. Yu, Y. Lu, G. G. Yen, and M. Cai, “Differential evolution mutation operators for constrained multi-objective optimization,” Applied Soft Computing, vol. 67, pp. 452–466, 2018.
+[30] F. Ming, W. Gong, L. Wang, and Y. Jin, “Constrained multi-objective optimization with deep reinforcement learning assisted operator selection,” IEEE/CAA Journal of Automatica Sinica, vol. 11, no. 4, pp. 919–931, 2024.
+[31] M. Miyakawa, K. Takadama, and H. Sato, “Directed mating using inverted pbi function for constrained multi-objective optimization,” in 2015 IEEE Congress on Evolutionary Computation (CEC), 2015, pp. 2929–2936.
+[32] C. He, R. Cheng, Y. Tian, X. Zhang, K. C. Tan, and Y. Jin, “Paired offspring generation for constrained large-scale multiobjective optimization,” IEEE Transactions on Evolutionary Computation, vol. 25, no. 3, pp. 448–462, 2021.
+[33] A. Gupta, Y.-S. Ong, and L. Feng, “Insights on transfer optimization: Because experience is the best teacher,” IEEE Transactions on Emerging Topics in Computational Intelligence, vol. 2, no. 1, pp. 51–64, 2018.
+[34] K. Qiao, K. Yu, B. Qu, J. Liang, H. Song, C. Yue, H. Lin, and K. C. Tan, “Dynamic auxiliary task-based evolutionary multitasking for constrained multiobjective optimization,” IEEE Transactions on Evolutionary Computation, vol. 27, no. 3, pp. 642–656, 2023.
+[35] E. Zitzler, M. Laumanns, and L. Thiele, “Spea2: Improving the strength pareto evolutionary algorithm,” TIK-Report, vol. 103, 07 2001.
+[36] R. Cheng and Y. Jin, “A competitive swarm optimizer for large scale optimization,” IEEE Transactions on Cybernetics, vol. 45, no. 2, pp. 191–204, 2015.
+[37] K. Qiao, J. Liang, K. Yu, X. Ban, C. Yue, B. Qu, and P. N. Suganthan, “Constraints separation based evolutionary multitasking for constrained multi-objective optimization problems,” IEEE/CAA Journal ofAutomatica Sinica, vol. 11, no. 8, pp. 1819–1835, 2024.
+[38] Z. Fan, W. Li, X. Cai, H. Li, C. Wei, Q. Zhang, K. Deb, and E. Goodman, “Difficulty adjustable and scalable constrained multiobjective test problem toolkit,” Evolutionary Computation, vol. 28, no. 3, pp. 339–378, 2020.
+[39] H. Jain and K. Deb, “An evolutionary many-objective optimization algorithm using reference-point based nondominated sorting approach, part ii: Handling constraints and extending to an adaptive approach,” IEEE Transactions on Evolutionary Computation, vol. 18, no. 4, pp. 02–622, 2014. 
+[40] K. Li, R. Chen, G. Fu, and X. Yao, “Two-archive evolutionary algorithm for constrained multiobjective optimization,” IEEE Transactions on Evolutionary Computation, vol. 23, no. 2, pp. 303–315, 2019.
+[41] Z. Fan, W. Li, X. Cai, H. Huang, Y. Fang, Y. Yugen, J. Mo, C. Wei, and E. Goodman, “An improved epsilon constraint-handling method in moea/d for cmops with large infeasible regions,” Soft Computing, vol. 23, pp. 12 491–12 510, 2019.
+[42] J. Yuan, H. Liu, Y.-S. Ong, and Z. He, “Indicator-based evolutionary algorithm for solving constrained multiobjective optimization problems,” IEEE Transactions on Evolutionary Computation, vol. 26, no. 2, pp. 379–391, 2022.
+[43] Y. Tian, R. Cheng, X. Zhang, and Y. Jin, “PlatEMO: A MATLAB platform for evolutionary multi-objective optimization,” IEEE Computational Intelligence Magazine, vol. 12, pp. 73–87, 11 2017.
+[44] Y. Tian, R. Wang, Y. Zhang, and X. Zhang, “Adaptive population sizing for multi-population based constrained multi-objective optimization,” Neurocomputing, vol. 621, p. 129296, 2025.
+[45] R. Sun, J. Zou, Y. Liu, S. Yang, and J. Zheng, “A multistage algorithm for solving multiobjective optimization problems with multiconstraints,” IEEE Transactions on Evolutionary Computation, vol. 27, no. 5, pp. 1207–1219, 2023.
+[46] L. R. C. de Farias and A. F. R. Araújo, “An inverse modeling constrained multi-objective evolutionary algorithm based on decomposition,” 2024 IEEE International Conference on Systems, Man, and Cybernetics (SMC), pp. 3727–3732, 2024. [Online]. Available: https://api.semanicscholar.org/CorpusID:273638540 
+[47] X. Ban, J. Liang, K. Qiao, K. Yu, Y. Wang, J. Peng, and B. Qu, “A decision variables classification-based evolutionary algorithm for constrained multi-objective optimization problems,” IEEE/CAA Journal of Automatica Sinica, vol. 12, no. 9, pp. 1830–1849, 2025.
+[48] L. Si, X. Zhang, Y. Zhang, S. Yang, and Y. Tian, “An efficient sampling approach to offspring generation for evolutionary large-scale constrained multi-objective optimization,” IEEE Transactions on Emerging Topics in Computational Intelligence, vol. 9, no. 3, pp. 2080–202, 2025. 
+[49] K. Deb, R. B. Agrawal et al., “Simulated binary crossover for continuous search space,” Complex systems, vol. 9, no. 2, pp. 115–148, 1995.
+[50] P. Bosman and D. Thierens, “The balance between proximity and diversity in multiobjective evolutionary algorithms,” IEEE Transactions on Evolutionary Computation, vol. 7, no. 2, pp. 174–188, 2003.
+[51] E. Zitzler and L. Thiele, “Multiobjective evolutionary algorithms: a comparative case study and the strength pareto approach,” IEEE Transactions on Evolutionary Computation, vol. 3, no. 4, pp. 257–271, 1999.
+[52] J. Alcalá-Fdez, L. Sánchez, S. García, M. J. del Jesus, S. Ventura, J. M. Garrell, J. Otero, C. Romero, J. Bacardit, V. M. Rivas, J. C. Fernández, and F. Herrera, “KEEL: A software tool to assess evolutionary algorithms for data mining problems,” Soft Comput., vol. 13, n. 3, pp. 307–318, 2009. 
+[53] B. Kannan and S. N. Kramer, “An augmented lagrange multiplier based method for mixed integer discrete continuous optimization and its applications to mechanical design,” Journal of mechanical design, vol. 116, no. 2, pp. 405–411, 1994.
+[54] F. Y. Cheng and X. S. Li, “A generalized center method for multiobjective optimization,” 1997.
+[55] L. Fan, T. Yoshino, T. Xu, Y. Lin, and H. Liu, “A novel hybrid algorithm for solving multiobjective optimization problems with engineering applications,” Mathematical Problems in Engineering, vol. 2018, no. 1, p. 5316379, 2018.
+[56] G. Guillén-Gosálbez, “A novel milp-based objective reduction method for multi-objective optimization: Application to environmental problems,” Computers & Chemical Engineering, vol. 35, no. 8, pp. 1469– 1477, 2011.
+[57] H. Ryoo and N. Sahinidis, “Global optimization of nonconvex nlps and minlps with applications in process design,” Computers & Chemical Engineering, vol. 19, no. 5, pp. 551–566, 1995.
+[58] G. R. Kocis and I. E. Grossmann, “Global optimization of nonconvex mixed-integer nonlinear programming (minlp) problems in process synthesis,” Industrial & engineering chemistry research, vol. 27, no. 8, pp. 1407–1421, 1988.
+[59] G. Kocis and I. Grossmann, “A modelling and decomposition strategy for the minlp optimization of process flowsheets,” Computers & Chemical Engineering, vol. 13, no. 7, pp. 797–819, 1989.
+[60] C. A. Floudas, Nonlinear and Mixed-Integer Optimization: Fundamentals and Applications. Oxford University Press, 11 1995.
+[61] A. K. Rathore, J. Holtz, and T. Boller, “Synchronous optimal pulsewidth modulation for low-switching-frequency control of medium-voltage multilevel inverters,” IEEE Transactions on Industrial Electronics, vol. 57, no. 7, pp. 2374–2381, 2010.
+[62] A. Edpuganti and A. K. Rathore, “Fundamental switching frequency optimal pulsewidth modulation of medium-voltage cascaded seven-level inverter,” IEEE Transactions on Industry Applications, vol. 51, no. 4, pp. 3485–3492, 2015.
+[63] S. Y. Zeng, L. S. Kang, and L. X. Ding, “An orthogonal multi-objective evolutionary algorithm for multi-objective optimization problems with constraints,” Evolutionary Computation, vol. 12, no. 1, pp. 77–98, 2004.
