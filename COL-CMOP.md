@@ -13,16 +13,14 @@ cations, such as job shop scheduling problems [1], circuit design problem [2] an
 To tackle these challenges, numerous constraint-handling techniques (CHTs) have been developed and incorporated into evolutionary algorithms (EAs) [4]–[7]. Among them, the constraint dominance principle (CDP) stands out as a classic approach due to its simplicity and parameter-free nature [8]. However, when the problem contains large infeasible barriers or disjoint feasible islands, CDP often leads to premature convergence. To alleviate this, ε methods have gained popularity [9], [10]. By dynamically relaxing constraint boundaries through a threshold ε, these methods allow the population to preserve high-quality infeasible solutions, thereby enabling the traversal of infeasible regions to converge to the CPF. More recently, multi-population and multi-tasking frameworks have been proposed and widely utilized to decouple constraint satisfaction and objective optimization [11]–[13]. The key feature of these methods lies in equipping different populations with distinct CHTs and assigning them different tasks, thereby enhancing algorithmic performance through knowledge transfer between populations. Nevertheless, as reflected in the experimental results in Section IV-B, existing approaches, despite the integration of various advanced CHTs, often struggle to maintain a satisfactory and comprehensive performance when solving CMOPs with diverse landscapes. To systematically address challenges arising from different types of problems, we present the following analysis of the current studies. 
 
 • In many existing multi-population and multi-tasking frameworks, knowledge transfer between populations is primarily achieved by sharing the spatial coordinates of high-quality solutions. While this approach effectively transmits the locations of promising regions, it fails to uncover and convey the potential beneficial convergence directions within the evolutionary process that could help populations converge and search more efficiently. When handling problems with complex landscapes, the main population may converge slowly, while the auxiliary populations may perform redundant searches in the regions explored by the main population. Hence, a directionguided collaborative framework is needed to decouple global exploration and diversity exploitation. 
-
 • Even existing CMOEAs equipped with various advanced CHTs still primarily rely on traditional reproduction operators, such as differential evolution (DE) and genetic algorithms (GA), to generate offspring. Their search process is mainly driven by random neighborhood perturbations around the current solutions, which may limit algorithmic performance in CMOPs featuring expansive search space landscapes. Therefore, there is significant potential in extracting reusable search experience from population evolution to form promising search directions and guide more efficient evolution. 
-
 • Several CMOEAs tend to favor solutions with better feasibility or convergence in their environment selection [14], [15]. Although such preference facilitates rapid convergence, it may also cause the population to converge unidirectionally toward CPF in a clustered state, hindering the population’s ability to perform extensive searches. When the feasible region is narrow and separated, such as LIR-CMOP3, this strategy makes the population prone to being trapped in local feasible regions, resulting in only a small fraction of CPFs being searched. Thus, it is necessary to maintain good distribution in the objective space and promote uniform search across multiple directions. 
 
 Based on the above considerations, in this article, we propose a dual-swarm optimizer with collaborative orthogonal learning, named DSOCOL. Specifically, the main contributions of our research include the following. 
 
 1) A dual-swarm cooperative framework driven by evolutionary direction learning is proposed to decouple the conflicting tasks of convergence and diversity. Specifically, the framework synergizes solution knowledge transfer with evolutionary direction learning. The primary swarm primarily focuses on rapidly converging to feasible regions to localize the CPF, while the auxiliary swarm emphasizes extensive exploitation of the objective space to enhance uniform search for the CPF. By sharing both high-quality offspring solutions and promising evolutionary directions, the two swarms effectively collaborate to overcome challenges in CMOPs with complex landscapes. 
 
-2) A novel collaborative orthogonal learning (COL) strategy is developed to synergize the search behaviors of the two swarms. Instead of merely sharing the solutions, the main swarm performs trend learning to extract promising convergence directions by the solution status within different niches and transmits them to the auxiliary swarm, ensuring global exploration. The auxiliary swarm then executes orthogonal learning based on these trends to explore complementary subspaces, aiming to reduce redundant searches and enhance diversity exploitation along the CPF. 
+2) A novel collaborative orthogonal learning (COL) strategy is developed to synergize the search behaviors of the two swarms. Instead of merely sharing the solutions, the main swarm performs trend learning to extract promising convergence directions by the solution status within different niches and transmits them to the auxiliary swarm, ensuring global exploration. The auxiliary swarm then executes orthogonal learning based on these trends to explore complementary subspaces, aiming to reduce redundant searches and enhance diversity exploitation along the CPF.
 
 3) A niche-guided subset selection strategy is designed for environmental selection to handle irregular Pareto fronts. By implementing a three-level subset division mechanism based on local niche capacity, this strategy dynamically regulates swarm density. The strategy ensures the exploration of sparse niches and effectively manages the trade-off between local convergence and global diversity, enhancing the capability to capture discrete CPF fragments. 
 
@@ -241,25 +239,15 @@ $$
 \mathbf {u} _ {a u x} = \mathbf {x} _ {b} + \boldsymbol {\eta} _ {j} \cdot \mathbf {v} ^ {\perp}\tag{9}
 $$
 
-where $\mathbf { x } _ { b }$ is the best winner solution within a specific niche of $s _ { 2 } ;$ $\underline { { \mathbf { v } ^ { \perp } } }$ is the orthogonal direction derived from the convergence direction v (Eq. (8)). 
+where $\mathbf { x } _ { b }$ is the best winner solution within a specific niche of $S _ { 2 } ;$ $\underline { { \mathbf { v } ^ { \perp } } }$ is the orthogonal direction derived from the convergence direction v (Eq. (8)). 
 
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/1a068c3ce7809620472d800f41b5c6d14226c70e0dc67285ea86d1cdcfe80f9a.jpg)
-
-
-![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/655df80ee13ec53a53e087c0b7306973252cde63aae53451cc510881f7788446.jpg)
-
-
-
 (a) Trend Learning
 
-
-
+![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/655df80ee13ec53a53e087c0b7306973252cde63aae53451cc510881f7788446.jpg)
 (b) Orthogonal Learning
 
-
-
-Fig. 1. An illustration example of the proposed collaborative orthogonal learning. (a) Trend Learning in $s _ { \mathrm { 1 } } \mathrm { : }$ : The convergence direction (blue solid line) is synthesized from local and global vectors to guide offspring (green stars) to converge toward the CPS. (b) Orthogonal Learning in $\quad s _ { 2 } { \mathrm { : } }$ The complementary direction (purple solid line) is generated by orthogonalizing the transferred trend (blue dashed line) to expand diversity along the CPS.
-
+Fig. 1. An illustration example of the proposed collaborative orthogonal learning. (a) Trend Learning in $S_1$ : The convergence direction (blue solid line) is synthesized from local and global vectors to guide offspring (green stars) to converge toward the CPS. (b) Orthogonal Learning in $S_2$: The complementary direction (purple solid line) is generated by orthogonalizing the transferred trend (blue dashed line) to expand diversity along the CPS.
 
 For a clearer understanding of the proposed collaborative orthogonal learning strategy, Fig. 1 illustrates the process of executing the COL strategy within a niche. As shown in Fig. 1(a), the trend learning process of the main swarm $( S _ { 1 } )$ is depicted. Specifically, $\mathbf { x } _ { w }$ and $\mathbf { x } _ { l }$ represent the selected representative solutions. They form the basis for constructing potential convergence vectors: the local exploitation vector $( \Delta _ { 1 } )$ and the global exploration vector $( \Delta _ { 2 }$ and $\Delta _ { 2 } ^ { \prime } )$ . These vectors are dynamically synthesized to form a unified convergence direction (the blue solid line). Subsequently, experimental solutions (represented by green stars) are generated along the directions. The primary task of $ { \boldsymbol { S } } _ { 1 }$ is to identify and learn promising directions that enable rapid convergence towards the CPS, ensuring global exploration. 
 
@@ -331,34 +319,18 @@ To visualize the proposed NGSS strategy, Fig. 2 presents an illustrative example
 
 Fig. 2(a) illustrates the first-level subset division. All solutions are divided into two subsets based on the CDP: the non-dominated feasible set $\Phi ^ { n f } \left( x _ { 1 } , x _ { 2 } , x _ { 3 } \right)$ and the remainder set $\Phi ^ { r e m } \left( x _ { 4 } – x _ { 1 2 } \right)$ . This step prioritizes feasibility and convergence. 
 
-Fig. 2(b) shows the second-level subset division. Solutions in $\bar { \Phi ^ { n f } }$ are assigned to niches based on angular distance, $\Phi _ { 1 } ^ { n f } = \Phi _ { 3 } ^ { n f } = \breve { \emptyset } , \Phi _ { 2 } ^ { n f } = \left\{ x _ { 1 } , x _ { 2 } , x _ { 3 } \right\}$ . Since the number of solutions in $\Phi _ { 2 } ^ { n f }$ exceeds $L \left( 3 > 2 \right)$ , the most crowded solution x<sub>2</sub> is removed and added to Φ<sup>rem</sup>. Consequently, $\overline { { \Phi _ { 2 } ^ { n J } } }$ retains $\overline { { \{ x _ { 1 } , x _ { 3 } \} } }$ . This level effectively controls population density in 
+Fig. 2(b) shows the second-level subset division. Solutions in $\bar { \Phi ^ { n f } }$ are assigned to niches based on angular distance, $\Phi _ { 1 } ^ { n f } = \Phi _ { 3 } ^ { n f } = \breve { \emptyset } , \Phi _ { 2 } ^ { n f } = \left\{ x _ { 1 } , x _ { 2 } , x _ { 3 } \right\}$ . Since the number of solutions in $\Phi _ { 2 } ^ { n f }$ exceeds $L \left( 3 > 2 \right)$ , the most crowded solution x<sub>2</sub> is removed and added to Φ<sup>rem</sup>. Consequently, $\overline { { \Phi _ { 2 } ^ { n J } } }$ retains $\overline { { \{ x _ { 1 } , x _ { 3 } \} } }$ . This level effectively controls population density in favored objective regions. 
 
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/c82c05fecf965f683b3a9d12219fb25cbc6efc40681bf849e5763dda43380f5b.jpg)
-
-
-
 (a) First-Level Subset Division
 
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/32ce594308538070c8fe6536321023d441d6ae2833f9841f7d106fca4abd81bf.jpg)
-
-
-
 (b) Second-Level Subset Division
 
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/a613c659242e4f9643aa2660bbe4263001c99046ba26b1f3077b6b9a807f635c.jpg)
-
-
-
 (c) Third-Level Subset Division
 
-
-
 Fig. 2. An illustration example of the proposed niche-guided subset selection.
-
-
-favored objective regions. 
 
 Fig. 2(c) depicts the third-level subset division. The solutions in Φ<sup>rem</sup> are also categorized into niches: $\Phi _ { 1 } ^ { r e m } = $ $\{ x _ { 4 } , x _ { 5 } , x _ { 1 0 } \} , \Phi _ { 2 } ^ { r e m } = \{ x _ { 2 } , x _ { 6 } , . . . , x _ { 1 2 } \}$ , and $\Phi _ { 3 } ^ { r e m } = \{ x _ { 9 } \}$ Then the sparse niches are filled (where size $< L )$ . Specifically, for the empty $\Phi _ { 1 } ^ { n f }$ , solutions $x _ { 4 }$ and $x _ { 5 }$ are selected from $\Phi _ { 1 } ^ { r e m }$ based on CDP. For the empty $\Phi _ { 3 } ^ { n f }$ $x _ { 9 }$ from $\Phi _ { 3 } ^ { r e m }$ is added first. Since it still requires one more solution, $x _ { 8 }$ is selected from the remaining candidates due to its smaller angular distance to $V ^ { 3 }$ . Finally, the updated niches are $\Phi _ { 1 } ^ { n f } = \{ \bar { x _ { 4 } } , x _ { 5 } \} , \Phi _ { 2 } ^ { n f } = \{ x _ { 1 } , x _ { 3 } \}$ , and $\Phi _ { 3 } ^ { n f } \dot { { \bf \Phi } } = \{ x _ { 8 } , x _ { 9 } \}$ . The third level ensures that the swarm does not exhibit preferential search for specific niches. In summary, the proposed NGSS strategy aims to uniformly search the objective space while ensuring a degree of convergence pressure, thereby enhancing the ability to capture discrete CPFs. 
 
@@ -398,17 +370,10 @@ DVCEA classifies decision variables into constraint-related and constraint-irrel
 
 LCMEA employs a sampling approach to generate offspring in preferred directions. However, the sampling points rely on local population distribution. For problems like LIR-CMOPs with fragmented CPFs and narrow feasible regions, local sampling fails to identify the global direction needed to cross large infeasible barriers, resulting in incomplete CPF coverage. 
 
-
 TABLE I
-
-
-
 A SHORT SUMMARY OF COMPARISON STUDY RESULTS ON FOUR BENCHMARK SUITES WITH STANDARD DIMENSIONS
 
-
 <table><tr><td colspan="2">DSOCOL vs (+/-/=)</td><td>APSEA</td><td>C3M</td><td>CMOEMT</td><td>DRLOS-EMCMO</td><td>IM-C-MOEA/D</td><td>CMOCSO</td><td>DVCEA</td><td>LCMEA</td><td>POCEA</td></tr><tr><td rowspan="2">DAS-CMOPs</td><td>IGD</td><td>3/6/0</td><td>0/7/2</td><td>3/6/0</td><td>0/4/5</td><td>0/8/1</td><td>1/5/3</td><td>3/5/1</td><td>0/9/0</td><td>0/9/0</td></tr><tr><td>HV</td><td>3/6/0</td><td>0/7/2</td><td>3/3/3</td><td>0/4/5</td><td>0/8/1</td><td>0/4/5</td><td>3/3/3</td><td>0/9/0</td><td>0/9/0</td></tr><tr><td rowspan="2">C-DTLZs</td><td>IGD</td><td>1/1/2</td><td>1/3/0</td><td>1/3/0</td><td>1/1/2</td><td>0/4/0</td><td>1/0/3</td><td>1/2/1</td><td>1/2/1</td><td>1/2/1</td></tr><tr><td>HV</td><td>2/1/1</td><td>0/4/0</td><td>0/1/3</td><td>1/2/1</td><td>0/4/0</td><td>1/0/3</td><td>2/1/1</td><td>0/3/1</td><td>0/4/0</td></tr><tr><td rowspan="2">DC-DTLZs</td><td>IGD</td><td>1/3/2</td><td>0/6/0</td><td>1/3/2</td><td>1/3/2</td><td>0/6/0</td><td>2/1/3</td><td>1/4/1</td><td>0/6/0</td><td>0/6/0</td></tr><tr><td>HV</td><td>1/4/1</td><td>0/6/0</td><td>2/2/2</td><td>0/3/3</td><td>0/6/0</td><td>1/1/4</td><td>0/3/3</td><td>0/6/0</td><td>0/6/0</td></tr><tr><td rowspan="2">LIR-CMOPs</td><td>IGD</td><td>0/14/0</td><td>0/14/0</td><td>0/11/3</td><td>0/12/2</td><td>0/14/0</td><td>1/11/2</td><td>2/11/1</td><td>0/14/0</td><td>0/13/1</td></tr><tr><td>HV</td><td>0/14/0</td><td>0/14/0</td><td>0/11/3</td><td>0/13/1</td><td>0/14/0</td><td>2/9/3</td><td>2/11/1</td><td>0/14/0</td><td>0/14/0</td></tr></table>
-
-Authorized licensed use limited to: XIDIAN UNIVERSITY. Downloaded on July 01,2026 at 07:47:47 UTC from IEEE Xplore. Restrictions apply. © 2026 IEEE. All rights reserved, including rights for text and data mining and training of artificial intelligence and similar technologies. Personal use is permitted, but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information. 
 
 POCEA uses a pairing strategy to reproduce promising offspring by emphasizing useful infeasible solutions. However, its pairing process is primarily based on static Euclidean distance and fails to capture dynamic trend information. When facing the combined three-hardness of DAS-CMOP, simple pairing is insufficient to generate offspring that can simultaneously penetrate multiple constraints and maintain distribution. 
 
@@ -416,13 +381,8 @@ The aforementioned CMOEAs encounter significant challenges when confronting dive
 
 Furthermore, to further verify the superiority of DSOCOL, we conducted the Friedman test with Holm correction to perform the statistical analysis, which is presented in Table II. From the table, DSOCOL got the best rankings on IGD and HV. Furthermore, all $p \mathrm { - }$ values were below a significance level of 0.05, which indicating that DSOCOL significantly outperforms the other nine compared CMOEAs. These results further validate the effectiveness of DSOCOL in balancing feasibility, convergence, and diversity when dealing with CMOPs with different characteristics. 
 
-
 TABLE II
-
-
-
 AVERAGE RANKINGS AND p-VALUES OF IGD AND HV BY THE FRIEDMAN TEST OF DSOCOL AND OTHER COMPARED CMOEAS ON FOUR STANDARD BENCHMARK SUITES.
-
 
 <table><tr><td>Algorithm</td><td>IGD Ranking</td><td>p-value</td><td>HV Ranking</td><td>p-value</td></tr><tr><td>APSEA</td><td>6.5455</td><td>0.000000</td><td>6.4091</td><td>0.000000</td></tr><tr><td>C3M</td><td>5.4545</td><td>0.000006</td><td>5.3182</td><td>0.000080</td></tr><tr><td>CMOEMT</td><td>4.4848</td><td>0.001319</td><td>4.0909</td><td>0.021616</td></tr><tr><td>DRLOS-EMCMO</td><td>3.7576</td><td>0.025347</td><td>4.0303</td><td>0.026709</td></tr><tr><td>IM-C-MOEA/D</td><td>9.5303</td><td>0.000000</td><td>9.5303</td><td>0.000000</td></tr><tr><td>CMOCSO</td><td>3.5909</td><td>0.044171</td><td>3.8939</td><td>0.042074</td></tr><tr><td>DVCEA</td><td>4.9545</td><td>0.000122</td><td>4.9394</td><td>0.000592</td></tr><tr><td>LCMEA</td><td>7.0909</td><td>0.000000</td><td>6.8030</td><td>0.000000</td></tr><tr><td>POCEA</td><td>7.5000</td><td>0.000000</td><td>7.6061</td><td>0.000000</td></tr><tr><td>DSOCOL</td><td>2.0909</td><td></td><td>2.3788</td><td></td></tr></table>
 
@@ -435,88 +395,48 @@ AVERAGE RANKINGS AND p-VALUES OF IGD AND HV BY THE FRIEDMAN TEST OF DSOCOL AND O
 In this section, we set up five variants to further confirm the effectiveness and necessity of the different components. 
 
 • DSOCOL1: The auxiliary swarm $S _ { 2 }$ employs Algorithm 4 instead of the proposed NGSS strategy; 
-
 • DSOCOL2: The winners groups of both swarms are updated solely through polynomial mutation; 
-
 • DSOCOL3: The proposed COL strategy is not implemented; 
-
 • DSOCOL4: The trend learning strategy is not implemented (without Eq. (8)); 
-
 • DSOCOL5: The orthogonal learning strategy is not implemented (without Eq. (9)); 
 
 To fully validate the overall performance of the proposed methods, we compared DSOCOL and its five variants under both standard dimensions and 1000 dimensions across four benchmarks. Table III provides all the summary results of the ablation experiments and the detailed results of IGD and HV is presented in Tables S-XI and S-XII of the Supplementary Files. The following conclusions can be drawn from these results: (1) DSOCOL significantly outperformed DSOCOL1, which demonstrates that the proposed NGSS strategy can maintain comprehensive exploration for the whole objective space. (2) Compared to DSOCOL2, DSOCOL performed superior or competitive performance in 78% of cases, validating the effectiveness of further improvements to the winner group. (3) DSOCOL outperformed DSOCOL3, DSOCOL4, and DSOCOL5 confirming the effectiveness of the proposed COL strategy. 
 
 
 TABLE III
-
-
-
 SUMMARY RESULTS OF DSOCOL AND ITS FIVE VARIANTS ON THE FOUR BENCHMARK SUITES WITH VARYING DIMENSIONS.
-
 
 <table><tr><td></td><td>IGD(+/ - / ≈)</td><td>HV(+/ - / ≈)</td></tr><tr><td>DSOCOL1 vs. DSOCOL</td><td>5/25/36</td><td>8/19/39</td></tr><tr><td>DSOCOL2 vs. DSOCOL</td><td>17/33/16</td><td>12/27/27</td></tr><tr><td>DSOCOL3 vs. DSOCOL</td><td>8/36/22</td><td>1/32/33</td></tr><tr><td>DSOCOL4 vs. DSOCOL</td><td>5/44/17</td><td>1/40/25</td></tr><tr><td>DSOCOL5 vs. DSOCOL</td><td>4/20/43</td><td>1/22/43</td></tr></table>
 
 To clarify the impact of the proposed NGSS strategy, we plot the populations, with the median IGD among 30 runs on LIR-CMOP3, obtained by DSOCOL1 and DSOCOL are presented in Fig. 3. It was evident that although DSOCOL1 successfully converged to the feasible region, it exhibited poor performance as it only captured a limited portion of the CPF. This failure was primarily attributed to the absence of the NGSS strategy, which caused DSOCOL1 to converge rapidly in a clustered state that led the population into local feasible regions. Specifically, for problems like LIR-CMOP3 with discrete CPFs, once DSOCOL1 became trapped in local optima, it lacked the capability to re-distribute across the objective space to locate all fragmented CPF segments. In contrast, DSOCOL, equipped with the NGSS strategy, facilitated a uniform search throughout the objective space and yielded highly competitive results, which provides compelling evidence of the effectiveness and necessity of NGSS strategies in maintaining population diversity. 
 
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/48728ca166c4ce39cd92ec8ffee8a039806e8ad490eb8f0a72b2beea09cd1235.jpg)
-
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/4a5da7f6267d7d02fbc7166060f981d03b93de5c003b662e16b8b60afc880c26.jpg)
-
-
-
 Fig. 3. Populations obtained by DSOCOL1 and DSOCOL on LIR-CMOP3.
-
 
 Furthermore, the effectiveness of the proposed improvements to the winner group and the COL strategy was further validated through Fig. 4. Clearly the convergence speed of DSOCOL2, which only performed polynomial mutation on the winner group, was significantly lower than DSOCOL and DSOCOL1, demonstrating that the performance of CSO operator can be effectively enhanced by further improving the winner groups through Eqs. (5) and (6). Likewise, the convergence rate of DSOCOL3 without the COL strategy deteriorated significantly and was markedly lower than those of DSOCOL, DSOCOL1, and DSOCOL2, which incorporated the COL strategy. These results confirmed that the COL strategy can successfully capture promising evolutionary directions and accelerate population convergence toward the CPF. 
 
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/65fb1183db26d335c01fc346b74d46e341cea819c780fe1c34bc86c5e3a73515.jpg)
-
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/831930c121c01ce279f42cb3c4148f6f5e3dc68cd50c343655d6770974d2e4dd.jpg)
-
-
-
 Fig. 4. Convergence results of DSOCOL and DSOCOL1-3 on DC1-DTLZ3 and LIR-CMOP11.
 
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/86ee2db037d29250cf500d0815c045c01b53d5cd209b7ed3fe52dce6076634f1.jpg)
-
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/81d12afe78fa370bf1615cebdfee1fafa4c54b99257d0abc30f1fee30394aa4a.jpg)
-
-
-
 Fig. 5. Convergence results of DSOCOL and DSOCOL4-5 on LIR-CMOP10 and DC3-DTLZ1.
-
 
 To further investigate the effectiveness and respective roles of trend learning and orthogonal learning in the COL strategy, Figs. 5 and 6 are presented for detailed analysis. As shown in Fig. 5, DSOCOL4, which excludes trend learning component, exhibited a significantly slower convergence speed than DSOCOL5 and DSOCOL, both of which incorporated trend learning. Moreover, DSOCOL converged slightly slower than DSOCOL5 on these two problems. This was because DSOCOL allocated part of the function evaluations to orthogonal learning in order to explore complementary search regions, whereas DSOCOL5 focused entirely on trend learning. These results indicated that trend learning is able to identify promising evolutionary directions, thereby accelerating the convergence toward the CPF. Fig. 6 illustrated the final populations obtained by DSOCOL5 and DSOCOL on C-DTLZ2 and LIR-CMOP3. It could be observed that both DSOCOL5 and DSOCOL, equipped with trend learning, achieved similar convergence performance. However, the final population achieved by DSOCOL, which additionally incorporated orthogonal learning, was noticeably more uniformly distributed than that of DSOCOL5. This finding suggested that orthogonal learning is capable of exploring search regions complementary to those identified by trend learning, thereby enhancing the exploration of neighborhoods around exploited areas and ultimately improving population diversity. 
 
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/e393b7911b32a55b0beabe714e3c9b1e79a2fe7eaad9df3cb8f54532ffa8e14c.jpg)
-
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/111e3e92a0391719768880639ef872f968da07d78eed3429b124328a5c90d693.jpg)
-
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/b1176e60d017a625a0b8823eda13432d0e2dede9e5a3f150050bad455d41ad4b.jpg)
-
-
 ![image](https://cdn-mineru.openxlab.org.cn/result/2026-08-02/3e831ea9-6727-4c0e-809d-d04660adc717/47c0f14ae4d80a6ad08aa80a10afa2b323ba092ab8fa9a352b3a17058e88a9e1.jpg)
-
-
-
 Fig. 6. Populations obtained by DSOCOL5 and DSOCOL on C-DTLZ2 and LIR-CMOP3.
-
 
 Eventually, we conducted the Friedman test on two metrics to further verify the necessity and effectiveness of the different components of DSOCOL. Table IV displays the statistical results, showing that DSOCOL always has the highest rankings. The p-values were less than 0.05, which indicates that DSOCOL is significantly better than these variants. Therefore, the experimental results further verify the necessity and effectiveness of the proposed NGSS strategy, the winner group improvement mechanism, and the COL strategy. These proposed methods ensure that the swarm can converge rapidly toward the CPF while maintaining extensive exploration across the entire objective space, thereby enhancing the algorithm’s capability for a comprehensive search along the CPF. 
 
 
 TABLE IV
-
-
-
 AVERAGE RANKINGS AND p-VALUES OF DSOCOL AND FIVE VARIANTS BY THE FRIEDMAN TEST ON FOUR BENCHMARK SUITES WITH VARYING SCALES.
-
 
 <table><tr><td>Algorithm</td><td>IGD Ranking</td><td>p-value</td><td>HV Ranking</td><td>p-value</td></tr><tr><td>DSOCOL1</td><td>3.5909</td><td>0.000217</td><td>3.2955</td><td>0.040652</td></tr><tr><td>DSOCOL2</td><td>3.5682</td><td>0.000285</td><td>3.4773</td><td>0.009178</td></tr><tr><td>DSOCOL3</td><td>3.6894</td><td>0.000063</td><td>3.9773</td><td>0.000035</td></tr><tr><td>DSOCOL4</td><td>4.6667</td><td>0.000000</td><td>4.5985</td><td>0.000000</td></tr><tr><td>DSOCOL5</td><td>3.0985</td><td>0.028769</td><td>3.0227</td><td>0.226421</td></tr><tr><td>DSOCOL</td><td>2.3864</td><td></td><td>2.6288</td><td></td></tr></table>
 
@@ -539,12 +459,9 @@ Since the true CPFs of these real-world applications are not known, we use the H
 
 
 TABLE V
-
 THE MEDIAN HV RESULTS OBTAINED BY DSOCOL AND ALL COMPARISON ALGORITHMS ON TEN RWCMOPS AMONG 30 RUNS. THE BEST RESULT IN EACH ROW IS HIGHLIGHTED
 
 <table><tr><td>Problem</td><td>APSEA</td><td>C3M</td><td>CMOEMT</td><td>DRLOS-EMCMO</td><td>IM-C-MOEA/D</td><td>CMOCSO</td><td>DVCEA</td><td>LCMEA</td><td>POCEA</td><td>DSOCOL</td></tr><tr><td>Pressure Vessel Design</td><td>6.0454e-1 (9.59e-4) -</td><td>6.0138e-1 (2.68e-3) -</td><td>5.9416e-1 (2.07e-3) -</td><td>6.0514e-1 (9.75e-4) -</td><td>5.8511e-1 (6.09e-3) -</td><td>5.4646e-1 (4.50e-2) -</td><td>6.0601e-1 (3.80e-4) ≈</td><td>6.0205e-1 (2.11e-3) -</td><td>5.8100e-1 (7.75e-3) -</td><td>6.0603e-1 (8.24e-4)</td></tr><tr><td>Four Bar Plane Truss</td><td>4.0936e-1 (1.75e-4) -</td><td>4.0956e-1 (1.29e-4) -</td><td>4.0943e-1 (1.13e-4) -</td><td>4.0972e-1 (8.71e-5) ≈</td><td>4.0196e-1 (1.84e-3) -</td><td>4.0962e-1 (1.27e-4) -</td><td>4.0939e-1 (1.59e-4) -</td><td>4.1020e-1 (1.02e-4) +</td><td>3.3625e-1 (1.22e-2) -</td><td>4.0970e-1 (7.78e-5)</td></tr><tr><td>Front Rail Design</td><td>4.0505e-2 (5.44e-6) ≈</td><td>4.0508e-2 (4.01e-6) ≈</td><td>4.0509e-2 (4.59e-6) ≈</td><td>4.0504e-2 (6.29e-6) ≈</td><td>3.9969e-2 (2.10e-4) -</td><td>4.0508e-2 (5.64e-6) ≈</td><td>4.0506e-2 (1.52e-5) ≈</td><td>4.0492e-2 (3.38e-5) ≈</td><td>4.0323e-2 (5.99e-5) -</td><td>4.0510e-2 (4.57e-6)</td></tr><tr><td>Heat Exchanger Ntweork Design</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>1.0000e+0 (0.00e+0) -</td><td>8.3095e-1 (3.37e-1) -</td><td>2.0000e-1 (4.47e-1) -</td><td>5.0364e+4 (7.12e+4)</td></tr><tr><td>Reactor Network Design</td><td>NaN (NaN) -</td><td>1.8758e+0 (3.50e+0) ≈</td><td>9.9451e-1 (9.19e-3) ≈</td><td>8.3152e-1 (2.51e-1) -</td><td>NaN (NaN) -</td><td>9.9856e-1 (0.00e+0) ≈</td><td>9.3315e-1 (7.21e-2) -</td><td>7.0574e-1 (2.92e-1) -</td><td>1.0365e+0 (1.56e-1) -</td><td>3.4847e+0 (6.12e+0)</td></tr><tr><td>Process Design Problem</td><td>1.3839e-1 (2.77e-2) ≈</td><td>1.4523e-1 (6.23e-3) +</td><td>1.4802e-1 (2.67e-2) ≈</td><td>1.4537e-1 (1.03e-2) +</td><td>1.8376e-1 (2.07e-2) +</td><td>9.8472e-2 (1.35e-2) -</td><td>1.3715e-1 (1.09e-2) ≈</td><td>1.2306e-1 (2.81e-2) -</td><td>1.3076e-1 (3.21e-2) ≈</td><td>1.3543e-1 (1.63e-2)</td></tr><tr><td>Process Synthesis Problem</td><td>7.6198e-1 (1.93e-2) -</td><td>7.6952e-1 (7.32e-3) -</td><td>7.5167e-1 (2.88e-2) -</td><td>7.72851e-1 (4.96e-3) -</td><td>6.9682e-1 (1.00e-1) -</td><td>6.2336e-1 (5.38e-2) -</td><td>7.8209e-1 (2.69e-3) ≈</td><td>7.2110e-1 (7.74e-2) -</td><td>3.3347e-1 (2.35e-1) -</td><td>7.8294e-1 (2.19e-3)</td></tr><tr><td>Process Flow Sheeting Problem</td><td>7.6198e-1 (1.93e-2) -</td><td>7.6952e-1 (7.32e-3) -</td><td>7.5167e-1 (2.88e-2) -</td><td>7.7851e-1 (4.96e-3) -</td><td>6.9682e-1 (1.00e-1) -</td><td>6.2336e-1 (5.38e-2) -</td><td>7.8209e-1 (2.69e-3) -</td><td>7.2110e-1 (7.74e-2) -</td><td>3.3347e-1 (2.35e-1) -</td><td>7.8606e-1 (1.17e-3)</td></tr><tr><td>Synchronous Optimal Pulse-width Modulation of 3-level Inverters</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>1.8821e-1 (1.95e-1) ≈</td><td>NaN (NaN) -</td><td>NaN (NaN) -</td><td>4.8626e-1 (3.10e-1)</td></tr><tr><td rowspan="2">Synchronous Optimal Pulse-width Modulation of 7-level Inverters</td><td>7.7564e-1 (4.57e-2) +/-/-/-/-</td><td>5.9497e-1 (2.33e-1) ≈</td><td>6.6799e-1 (2.22e-1) +</td><td>7.6749e-1 (5.34e-2) +</td><td>6.0888e-1 (3.05e-1) ≈</td><td>5.6533e-1 (3.54e-1) ≈</td><td>7.6420e-1 (5.20e-2) +</td><td>5.4489e-1 (1.60e-1) ≈</td><td>2.9724e-1 (3.10e-1) -</td><td>4.9731e-1 (1.74e-1)</td></tr><tr><td>1/7/2</td><td>1/6/3</td><td>1/6/3</td><td>2/6/2</td><td>1/8/1</td><td>0/7/3</td><td>1/4/5</td><td>1/7/2</td><td>0/9/1</td><td></td></tr></table>
-
-
 “NaN (NaN)” indicates that the algorithm failed to find any feasible solution across 30 independent runs. 
 
 
