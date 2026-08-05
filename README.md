@@ -61,6 +61,7 @@ COL-CMOP/
 ## 算法与 Benchmark 支持清单
 
 ### 支持算法 (10 种)
+
 | 算法标识 | 算法全称 / 描述 | 来源 |
 | :--- | :--- | :--- |
 | **DSOCOL** | Dual-Swarm Orthogonal Collaborative Learning | Wang et al., IEEE TEVC 2026 (核心复现) |
@@ -68,13 +69,14 @@ COL-CMOP/
 | **C3M** | Constrained Multi-Objective Evolutionary Algorithm with Multi-Stage and Multi-Population | PlatEMO / CMOEA Baseline |
 | **CMOCSO** | Constrained Multi-Objective Competitive Swarm Optimizer | PlatEMO / CMOEA Baseline |
 | **CMOEMT** | Constrained Multi-Objective Evolutionary Multitasking | PlatEMO / CMOEA Baseline |
-| **DRLOS-EMCMO**| Dynamic Resource Allocation & Learning-based Orthogonal Search | PlatEMO / CMOEA Baseline |
+| **DRLOS-EMCMO** | Dynamic Resource Allocation & Learning-based Orthogonal Search | PlatEMO / CMOEA Baseline |
 | **DVCEA** | Dual-Vector Constrained Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
-| **IM-C-MOEA/D**| Improved Constrained MOEA/D | PlatEMO / CMOEA Baseline |
+| **IM-C-MOEA/D** | Improved Constrained MOEA/D | PlatEMO / CMOEA Baseline |
 | **LCMEA** | Layered Constrained Multi-objective Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
 | **POCEA** | Pairwise Preference Constrained Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
 
 ### Benchmark 测试集 (4 大系列)
+
 - **C-DTLZ**: C1DTLZ1, C1DTLZ3, C2DTLZ2, C3DTLZ4
 - **DC-DTLZ**: DC1DTLZ1, DC1DTLZ3, DC2DTLZ1, DC2DTLZ3, DC3DTLZ1, DC3DTLZ3
 - **DAS-CMOP**: DASCMOP1 ~ DASCMOP9 (支持自定义 `difficulty` 参数)
@@ -85,10 +87,12 @@ COL-CMOP/
 ## 核心设计与通用协议
 
 ### 1. 数据解耦与 Population 规范
+
 - **`Population`**: 仅包含解的公共属性：`x` (决策变量), `f` (目标矩阵), `cv` (约束违反度向量), `g` (不等式约束), `h` (等式约束)。
 - **算法私有状态**: 算法独有变量（如 DSOCOL 的速度 $V_1, V_2$、APSEA 的理想点轨迹）全部在算法类内部独立维护，绝不污染公共数据结构。
 
 ### 2. 统一问题适配器 `PymooProblemAdapter`
+
 - 封装 pymoo Benchmark，自动提供变量上下界 `lower`/`upper` 与维度 `n_var`/`n_obj`。
 - **自动 FE 累加**：每次调用 `evaluate(x)` 时自动且精确记录 `eval_count` (FE)。
 - **约束违反度统一**：一元化计算 $CV = \sum \max(0, G) + \sum \max(0, |H| - \text{tol})$。
@@ -98,29 +102,39 @@ COL-CMOP/
 ## 快速开始与使用指南
 
 ### 环境依赖
+
 项目推荐使用 Python 3.10+，可通过 `uv` 或标准 `pip` 管理依赖：
+
 ```bash
 uv sync
 ```
 
 ### 1. 运行单元与集成测试 (31 个测试用例)
+
 运行全套自动化测试，校验系统基础设施与算法可重复性：
+
 ```bash
 uv run python -m unittest discover tests
 ```
 
 ### 2. 运行算法与 Benchmark 演示测试 (不保存文件)
+
 - **单算法测试**：
+
   ```bash
   uv run python -m tests.run_test --algorithm DSOCOL --problem C1DTLZ1 --max-evals 30000 --seed 42
   ```
+
 - **多算法与多 Benchmark 灵活组合测试**（支持 10 种算法与 4 大 Benchmark 任意组合）：
+
   ```bash
   uv run python -m tests.run_test --algorithms DSOCOL APSEA C3M CMOCSO --problems C1DTLZ1 LIRCMOP1 --max-evals 30000
   ```
 
 ### 3. 运行批量对比实验与导出报表
+
 使用 `run_experiment.py` 驱动多算法、多 Seed 独立重复实验：
+
 ```bash
 PYTHONPATH=. uv run python experiments/run_experiment.py \
   --algorithms DSOCOL APSEA C3M CMOCSO \
@@ -130,7 +144,9 @@ PYTHONPATH=. uv run python experiments/run_experiment.py \
   --pop-size 100 \
   --results-dir results
 ```
+
 运行完成后，将在 `results/` 目录下自动生成：
+
 - `summary_metrics.csv`：包含 `Feasible_Ratio`, `Mean_Feasible_ND`, `IGD (mean ± std)`, `HV (mean ± std)`, `Time_Mean_Sec` 的统计对照表。
 - `detailed_runs.csv`：包含每次 Seed 运行的明细记录。
 - `<Algorithm>/<Problem>/run_seed_<seed>.npz`：保存每次运行原始解集与目标空间的压缩二进制数据。

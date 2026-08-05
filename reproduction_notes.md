@@ -26,10 +26,12 @@ flowchart TD
 ```
 
 ### 1.1 双群体优化机制 (Dual-Swarm Optimization)
+
 - **主群体 $S_1$ (Main Swarm)**：侧重于**全局探索 (Global Exploration)** 与跨越不可行阻隔。结合动态 $\varepsilon$-约束松弛机制，通过竞争粒子群 (CSO) 失败者位置/速度更新 (Eq. 4) 与 $S_1$ 获胜者基于中心点与配对差值的 SBX 交叉更新 (Eq. 5) 推进收敛。
 - **辅群体 $S_2$ (Auxiliary Swarm)**：侧重于**多样性挖掘 (Diversity Exploitation)**。通过 CSO 失败者更新 (Eq. 4) 与 $S_2$ 获胜者向全局适应度最佳解的引导更新 (Eq. 6) 保持广阔的解空间搜索范围。
 
 ### 1.2 协同正交学习 (Collaborative Orthogonal Learning, COL)
+
 - **趋势学习 (Trend Learning, Eq. 8)**：从 $S_1$ 的获胜解 $x_w$、失败解 $x_l$ 及边界解 $x_r$ 的矢量差中提取全局收敛方向单位向量：
   $$v = \frac{\tau (x_w - x_l) + (1-\tau)(x_w - x_r)}{\|\tau (x_w - x_l) + (1-\tau)(x_w - x_r)\|}$$
   沿趋势方向生成主群体扩展解：$u_{\text{main}} = x_r + \eta_k \cdot v$。
@@ -38,6 +40,7 @@ flowchart TD
   沿单位正交方向 $\hat{p}$ 采样生成辅群体扩展解：$u_{\text{aux}} = x_{\text{anchor}} + \gamma \cdot \hat{p}$，有效避免冗余搜索并拓宽解分布。
 
 ### 1.3 生态位引导子集选择 (Niche-Guided Subset Selection, NGSS, Alg. 5)
+
 为避免在多目标空间解集过于集中，通过均匀单纯形权重向量计算夹角，采用三层划分机制维护局部生态位容量与拥挤度，保证最终获得的 Pareto 前沿分布均匀。
 
 ### 1.4 核心公式与算法步骤详解
@@ -68,9 +71,9 @@ flowchart TD
 | **C3M** | Constrained MOEA with Multi-Stage and Multi-Population | 采用多阶段与多种群协同策略，逐步放松约束与优化多目标。 |
 | **CMOCSO** | Constrained MO Competitive Swarm Optimizer | 基于竞争粒子群机制，利用失败者向获胜者学习推进约束搜索。 |
 | **CMOEMT** | Constrained MO Evolutionary Multitasking | 采用多任务进化机制，将约束问题转换为辅助无约束任务进行知识转移。 |
-| **DRLOS-EMCMO**| Dynamic Resource Allocation & Learning-based Orthogonal Search | 结合动态资源分配与学习型正交搜索机制。 |
+| **DRLOS-EMCMO** | Dynamic Resource Allocation & Learning-based Orthogonal Search | 结合动态资源分配与学习型正交搜索机制。 |
 | **DVCEA** | Dual-Vector Constrained Evolutionary Algorithm | 利用双向量（收敛向量与多样性向量）引导种群穿过不可行阻隔。 |
-| **IM-C-MOEA/D**| Improved Constrained MOEA/D | 改进型基于分解的约束 MOEA/D，结合自适应约束处理门限。 |
+| **IM-C-MOEA/D** | Improved Constrained MOEA/D | 改进型基于分解的约束 MOEA/D，结合自适应约束处理门限。 |
 | **LCMEA** | Layered Constrained Multi-objective Evolutionary Algorithm | 采用分层约束处理机制，将解集按约束违反程度分层维持。 |
 | **POCEA** | Pairwise Preference Constrained Evolutionary Algorithm | 基于成对偏好的约束进化算法，在目标空间保持优异分布。 |
 
