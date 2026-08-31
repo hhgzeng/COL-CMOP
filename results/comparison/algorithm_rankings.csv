@@ -1,0 +1,9 @@
+Category,Problem,DSOCOL (Ours) IGD Rank,DSOCOL (Ours) HV Rank,APSEA IGD Rank,APSEA HV Rank,CMOCSO IGD Rank,CMOCSO HV Rank,IM-C-MOEA/D IGD Rank,IM-C-MOEA/D HV Rank
+C-DTLZs,C1DTLZ1,Rank 1 (Base),Rank 1 (Base),Rank 3 (=),Rank 3 (=),Rank 2 (=),Rank 2 (=),Rank 4 (+),Rank 4 (+)
+DC-DTLZs,DC1DTLZ1,Rank 2 (Base),Rank 2 (Base),Rank 1 (=),Rank 1 (=),Rank 3 (=),Rank 3 (=),Rank 4 (+),Rank 4 (+)
+DAS-CMOP,DASCMOP1,Rank 2 (Base),Rank 2 (Base),Rank 4 (+),Rank 4 (+),Rank 1 (-),Rank 1 (-),Rank 3 (+),Rank 3 (+)
+DAS-CMOP,DASCMOP7,Rank 4 (Base),Rank 2 (Base),Rank 2 (=),Rank 1 (=),Rank 3 (=),Rank 3 (=),Rank 1 (-),Rank 4 (=)
+LIR-CMOP,LIRCMOP1,Rank 2 (Base),Rank 2 (Base),Rank 3 (+),Rank 3 (+),Rank 1 (-),Rank 1 (-),Rank 4 (+),Rank 4 (+)
+LIR-CMOP,LIRCMOP13,Rank 4 (Base),Rank 4 (Base),Rank 3 (=),Rank 3 (=),Rank 1 (-),Rank 1 (-),Rank 2 (=),Rank 2 (=)
+Summary,Average Rank,2.50,2.17,2.67,2.50,1.83,1.83,3.00,3.50
+Summary,Wilcoxon (+/=/−),Base (Ours),Base (Ours),2/4/0,2/4/0,0/3/3,0/3/3,4/1/1,4/2/0
