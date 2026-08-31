@@ -1,6 +1,6 @@
 # COL-CMOP 算法复现与统一基准实验框架
 
-论文 *Collaborative Orthogonal Learning for Constrained Multi-Objective Optimization* (Wang et al., IEEE TEVC 2026) 的 Python/Numpy 高效复现与对比实验框架。
+论文 _Collaborative Orthogonal Learning for Constrained Multi-Objective Optimization_ (Wang et al., IEEE TEVC 2026) 的 Python/Numpy 高效复现与对比实验框架。
 
 项目采用标准的**“公共核心层 / 算法层 / 问题层 / 实验层 / 测试层”**五层架构设计。每个算法独立位于 `algorithms/<算法名>/` 子包中，通过统一的问题适配器 `PymooProblemAdapter` 进行精确的函数评估次数 (FE) 预算控制、约束违反度计算与评估指标统计。
 
@@ -62,18 +62,18 @@ COL-CMOP/
 
 ### 支持算法 (10 种)
 
-| 算法标识 | 算法全称 / 描述 | 来源 |
-| :--- | :--- | :--- |
-| **DSOCOL** | Dual-Swarm Orthogonal Collaborative Learning | Wang et al., IEEE TEVC 2026 (核心复现) |
-| **APSEA** | Adaptive Population Size Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
-| **C3M** | Constrained Multi-Objective Evolutionary Algorithm with Multi-Stage and Multi-Population | PlatEMO / CMOEA Baseline |
-| **CMOCSO** | Constrained Multi-Objective Competitive Swarm Optimizer | PlatEMO / CMOEA Baseline |
-| **CMOEMT** | Constrained Multi-Objective Evolutionary Multitasking | PlatEMO / CMOEA Baseline |
-| **DRLOS-EMCMO** | Dynamic Resource Allocation & Learning-based Orthogonal Search | PlatEMO / CMOEA Baseline |
-| **DVCEA** | Dual-Vector Constrained Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
-| **IM-C-MOEA/D** | Improved Constrained MOEA/D | PlatEMO / CMOEA Baseline |
-| **LCMEA** | Layered Constrained Multi-objective Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
-| **POCEA** | Pairwise Preference Constrained Evolutionary Algorithm | PlatEMO / CMOEA Baseline |
+| 算法标识        | 算法全称 / 描述                                                                          | 来源                                   |
+| :-------------- | :--------------------------------------------------------------------------------------- | :------------------------------------- |
+| **DSOCOL**      | Dual-Swarm Orthogonal Collaborative Learning                                             | Wang et al., IEEE TEVC 2026 (核心复现) |
+| **APSEA**       | Adaptive Population Size Evolutionary Algorithm                                          | PlatEMO / CMOEA Baseline               |
+| **C3M**         | Constrained Multi-Objective Evolutionary Algorithm with Multi-Stage and Multi-Population | PlatEMO / CMOEA Baseline               |
+| **CMOCSO**      | Constrained Multi-Objective Competitive Swarm Optimizer                                  | PlatEMO / CMOEA Baseline               |
+| **CMOEMT**      | Constrained Multi-Objective Evolutionary Multitasking                                    | PlatEMO / CMOEA Baseline               |
+| **DRLOS-EMCMO** | Dynamic Resource Allocation & Learning-based Orthogonal Search                           | PlatEMO / CMOEA Baseline               |
+| **DVCEA**       | Dual-Vector Constrained Evolutionary Algorithm                                           | PlatEMO / CMOEA Baseline               |
+| **IM-C-MOEA/D** | Improved Constrained MOEA/D                                                              | PlatEMO / CMOEA Baseline               |
+| **LCMEA**       | Layered Constrained Multi-objective Evolutionary Algorithm                               | PlatEMO / CMOEA Baseline               |
+| **POCEA**       | Pairwise Preference Constrained Evolutionary Algorithm                                   | PlatEMO / CMOEA Baseline               |
 
 ### Benchmark 测试集 (4 大系列)
 
