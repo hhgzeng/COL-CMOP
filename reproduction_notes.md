@@ -129,7 +129,6 @@ COL-CMOP/
 │   ├── algorithm_rankings.csv           # 各 Benchmark 下算法排名与 Wilcoxon 检验表
 │   ├── igd_score_chart.png              # 算法 IGD 得分对比图
 │   ├── hv_score_chart.png               # 算法 HV 得分对比图
-│   ├── overall_ranking.png              # 算法总体平均排名柱状图
 │   └── plot_results.py                  # 一键生成图表与表格脚本
 │
 └── results-ablation/           # [6. 消融实验统计数据与可视化图表]
@@ -169,7 +168,7 @@ COL-CMOP/
 
 #### 总体平均排名统计 (Friedman Rank)
 
-根据 30 次独立运行统计，各算法在测试问题上的平均排名情况如下表及下图所示：
+根据 30 次独立运行统计，各算法在测试问题上的平均排名情况如下表所示：
 
 | 算法标识        | 算法全称                                   | IGD 平均排名 (越低越好) | HV 平均排名 (越低越好) | Wilcoxon 显著胜/平/负 (vs DSOCOL) |
 | :-------------- | :----------------------------------------- | :---------------------: | :--------------------: | :-------------------------------: |
@@ -177,8 +176,6 @@ COL-CMOP/
 | **DSOCOL**      | Dual-Swarm Optimizer with COL (Ours)       |        **2.50**         |        **2.17**        |          **基准 (Base)**          |
 | **APSEA**       | Adaptive Population Size Evolutionary Algo |          2.67           |          2.50          |        2 勝 / 4 平 / 0 負         |
 | **IM-C-MOEA/D** | Improved Constrained MOEA/D                |          3.00           |          3.50          |        4 勝 / 1 平 / 1 負         |
-
-![算法总体平均排名柱状图](results-exp/overall_ranking.png)
 
 #### 各 Benchmark 问题下算法指标对比图
 

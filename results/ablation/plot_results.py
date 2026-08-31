@@ -33,7 +33,13 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 # 设置学术图表全局绘图样式
-plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica", "SimHei", "STHeiti"]
+plt.rcParams["font.sans-serif"] = [
+    "DejaVu Sans",
+    "Arial",
+    "Helvetica",
+    "SimHei",
+    "STHeiti",
+]
 plt.rcParams["axes.unicode_minus"] = False
 plt.rcParams["mathtext.fontset"] = "cm"
 
@@ -88,23 +94,39 @@ def load_all_runs(results_dir: Path, algorithms: list[str]) -> pd.DataFrame:
         for npz_file in algo_dir.glob("**/*.npz"):
             prob_name = npz_file.parent.name
             with np.load(npz_file) as data:
-                n_feas = int(data["n_feasible"]) if "n_feasible" in data else len(data.get("feas_f", []))
-                igd_val = float(data["igd"]) if "igd" in data and not np.isnan(data["igd"]) else np.nan
-                hv_val = float(data["hv"]) if "hv" in data and not np.isnan(data["hv"]) else np.nan
+                n_feas = (
+                    int(data["n_feasible"])
+                    if "n_feasible" in data
+                    else len(data.get("feas_f", []))
+                )
+                igd_val = (
+                    float(data["igd"])
+                    if "igd" in data and not np.isnan(data["igd"])
+                    else np.nan
+                )
+                hv_val = (
+                    float(data["hv"])
+                    if "hv" in data and not np.isnan(data["hv"])
+                    else np.nan
+                )
                 t_val = float(data["elapsed_time"]) if "elapsed_time" in data else 0.0
-                rows.append({
-                    "Algorithm": algorithm,
-                    "Problem": prob_name,
-                    "Seed": npz_file.stem.split("_")[-1],
-                    "N_Feasible": n_feas,
-                    "IGD": igd_val,
-                    "HV": hv_val,
-                    "Time_s": t_val,
-                })
+                rows.append(
+                    {
+                        "Algorithm": algorithm,
+                        "Problem": prob_name,
+                        "Seed": npz_file.stem.split("_")[-1],
+                        "N_Feasible": n_feas,
+                        "IGD": igd_val,
+                        "HV": hv_val,
+                        "Time_s": t_val,
+                    }
+                )
     return pd.DataFrame(rows)
 
 
-def get_numeric_values(df: pd.DataFrame, col: str, fill_val: float | None = None) -> np.ndarray:
+def get_numeric_values(
+    df: pd.DataFrame, col: str, fill_val: float | None = None
+) -> np.ndarray:
     """提取指标数值数组。若 fill_val 为 None 则过滤出有限数值，否则用 fill_val 填充。"""
     vals = np.asarray(pd.to_numeric(df[col], errors="coerce"), dtype=float).copy()
     if fill_val is None:
@@ -140,8 +162,12 @@ def compute_statistics_and_reports(
 
     igd_ranks = {algo: [] for algo in algorithms}
     hv_ranks = {algo: [] for algo in algorithms}
-    wilcoxon_igd = {algo: {"+": 0, "=": 0, "-": 0} for algo in algorithms if algo != control_algo}
-    wilcoxon_hv = {algo: {"+": 0, "=": 0, "-": 0} for algo in algorithms if algo != control_algo}
+    wilcoxon_igd = {
+        algo: {"+": 0, "=": 0, "-": 0} for algo in algorithms if algo != control_algo
+    }
+    wilcoxon_hv = {
+        algo: {"+": 0, "=": 0, "-": 0} for algo in algorithms if algo != control_algo
+    }
 
     # 存储按问题各算法的 Mean/Std 供画图使用
     plot_data = {
@@ -189,18 +215,20 @@ def compute_statistics_and_reports(
             plot_data["hv_stds"][p_name][algo] = hv_stds[algo]
 
             # 1. 汇总表 (overall_summary) 行记录
-            summary_rows.append({
-                "Category": cat,
-                "Problem": p_name,
-                "Algorithm": algo,
-                "Runs": runs_counts[algo],
-                "IGD_Mean": igd_means[algo],
-                "IGD_Std": igd_stds[algo],
-                "HV_Mean": hv_means[algo],
-                "HV_Std": hv_stds[algo],
-                "Feasible_Mean": feas_means[algo],
-                "Time_Mean_s": time_means[algo],
-            })
+            summary_rows.append(
+                {
+                    "Category": cat,
+                    "Problem": p_name,
+                    "Algorithm": algo,
+                    "Runs": runs_counts[algo],
+                    "IGD_Mean": igd_means[algo],
+                    "IGD_Std": igd_stds[algo],
+                    "HV_Mean": hv_means[algo],
+                    "HV_Std": hv_stds[algo],
+                    "Feasible_Mean": feas_means[algo],
+                    "Time_Mean_s": time_means[algo],
+                }
+            )
 
         # 排序计算 Rank
         sorted_igd = sorted(algorithms, key=igd_means.__getitem__)
@@ -258,7 +286,9 @@ def compute_statistics_and_reports(
         score_entry = {"Category": cat, "Problem": p_name}
         for algo in algorithms:
             label = ALGORITHM_LABELS.get(algo, algo)
-            score_entry[f"{label} (IGD)"] = format_metric(igd_means[algo], igd_stds[algo])
+            score_entry[f"{label} (IGD)"] = format_metric(
+                igd_means[algo], igd_stds[algo]
+            )
             score_entry[f"{label} (HV)"] = format_metric(hv_means[algo], hv_stds[algo])
         score_rows.append(score_entry)
 
@@ -300,8 +330,12 @@ def compute_statistics_and_reports(
     df_scores = pd.DataFrame(score_rows)
     df_rankings = pd.DataFrame(ranking_rows)
 
-    plot_data["avg_igd_ranks"] = {algo: float(np.mean(igd_ranks[algo])) for algo in algorithms}
-    plot_data["avg_hv_ranks"] = {algo: float(np.mean(hv_ranks[algo])) for algo in algorithms}
+    plot_data["avg_igd_ranks"] = {
+        algo: float(np.mean(igd_ranks[algo])) for algo in algorithms
+    }
+    plot_data["avg_hv_ranks"] = {
+        algo: float(np.mean(hv_ranks[algo])) for algo in algorithms
+    }
 
     return df_summary, df_scores, df_rankings, plot_data
 
@@ -328,7 +362,9 @@ def plot_metric_chart(
     x_indices = np.arange(len(algorithms))
     bar_width = 0.55
 
-    direction_note = "(Lower is Better ↓)" if metric == "IGD" else "(Higher is Better ↑)"
+    direction_note = (
+        "(Lower is Better ↓)" if metric == "IGD" else "(Higher is Better ↑)"
+    )
 
     for idx, p_info in enumerate(problems):
         ax = axes_flat[idx]
@@ -360,12 +396,14 @@ def plot_metric_chart(
 
         # 标注具体数值
         max_val = max(v + e for v, e in zip(values, errors)) if values else 1.0
-        for b_idx, (bar, algo, v, err) in enumerate(zip(bars, algorithms, values, errors)):
+        for b_idx, (bar, algo, v, err) in enumerate(
+            zip(bars, algorithms, values, errors)
+        ):
             y_pos = bar.get_height() + err + (max_val * 0.03)
             txt = f"{v:.4f}" if v < 1.0 else f"{v:.3f}"
             if v < 0.001 and v > 0:
                 txt = f"{v:.2e}"
-            is_ours = (algo == "DSOCOL")
+            is_ours = algo == "DSOCOL"
             ax.text(
                 bar.get_x() + bar.get_width() / 2.0,
                 y_pos,
@@ -378,10 +416,18 @@ def plot_metric_chart(
                 zorder=4,
             )
 
-        ax.set_title(f"{p_name} ({cat})\n{note}", fontsize=11, fontweight="bold", color="#0F172A", pad=8)
+        ax.set_title(
+            f"{p_name} ({cat})\n{note}",
+            fontsize=11,
+            fontweight="bold",
+            color="#0F172A",
+            pad=8,
+        )
         ax.set_ylabel(metric, fontsize=10.5, fontweight="bold", color="#334155")
         ax.set_xticks(x_indices)
-        ax.set_xticklabels([ALGORITHM_LABELS[a] for a in algorithms], fontsize=9, rotation=12)
+        ax.set_xticklabels(
+            [ALGORITHM_LABELS[a] for a in algorithms], fontsize=9, rotation=12
+        )
         ax.grid(axis="y", linestyle="--", linewidth=0.7, color="#E2E8F0", zorder=1)
         ax.set_axisbelow(True)
 
@@ -441,16 +487,23 @@ def plot_overall_ranking_chart(
         color="#0F172A",
         pad=10,
     )
-    ax1.set_ylabel("Average Friedman Rank", fontsize=11, fontweight="bold", color="#334155")
+    ax1.set_ylabel(
+        "Average Friedman Rank", fontsize=11, fontweight="bold", color="#334155"
+    )
     ax1.set_xticks(x_indices)
-    ax1.set_xticklabels([ALGORITHM_LABELS[a] for a in algorithms], fontsize=10, fontweight="bold", color="#0F172A")
+    ax1.set_xticklabels(
+        [ALGORITHM_LABELS[a] for a in algorithms],
+        fontsize=10,
+        fontweight="bold",
+        color="#0F172A",
+    )
     ax1.set_ylim(0, 4.2)
     ax1.grid(axis="y", linestyle="--", linewidth=0.8, color="#E2E8F0", zorder=1)
     ax1.set_axisbelow(True)
 
     for bar, a, r in zip(bars1, algorithms, avg_igd):
         h = bar.get_height()
-        is_ours = (a == "DSOCOL")
+        is_ours = a == "DSOCOL"
         ax1.text(
             bar.get_x() + bar.get_width() / 2.0,
             h + 0.08,
@@ -481,16 +534,23 @@ def plot_overall_ranking_chart(
         color="#0F172A",
         pad=10,
     )
-    ax2.set_ylabel("Average Friedman Rank", fontsize=11, fontweight="bold", color="#334155")
+    ax2.set_ylabel(
+        "Average Friedman Rank", fontsize=11, fontweight="bold", color="#334155"
+    )
     ax2.set_xticks(x_indices)
-    ax2.set_xticklabels([ALGORITHM_LABELS[a] for a in algorithms], fontsize=10, fontweight="bold", color="#0F172A")
+    ax2.set_xticklabels(
+        [ALGORITHM_LABELS[a] for a in algorithms],
+        fontsize=10,
+        fontweight="bold",
+        color="#0F172A",
+    )
     ax2.set_ylim(0, 4.2)
     ax2.grid(axis="y", linestyle="--", linewidth=0.8, color="#E2E8F0", zorder=1)
     ax2.set_axisbelow(True)
 
     for bar, a, r in zip(bars2, algorithms, avg_hv):
         h = bar.get_height()
-        is_ours = (a == "DSOCOL")
+        is_ours = a == "DSOCOL"
         ax2.text(
             bar.get_x() + bar.get_width() / 2.0,
             h + 0.08,
@@ -523,8 +583,15 @@ def plot_overall_ranking_chart(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="生成 results-ablation 下精简的 3 个表格与 3 张图表。")
-    parser.add_argument("--dir", type=Path, default=DEFAULT_DIR, help="消融实验结果目录 (默认: 当前脚本所在目录)")
+    parser = argparse.ArgumentParser(
+        description="生成 results-ablation 下精简的 3 个表格与 3 张图表。"
+    )
+    parser.add_argument(
+        "--dir",
+        type=Path,
+        default=DEFAULT_DIR,
+        help="消融实验结果目录 (默认: 当前脚本所在目录)",
+    )
     args = parser.parse_args()
 
     results_dir = args.dir.resolve()
@@ -564,4 +631,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
