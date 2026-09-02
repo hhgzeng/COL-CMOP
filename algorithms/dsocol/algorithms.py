@@ -240,22 +240,34 @@ def algorithm4_environmental_selection(
 def algorithm5_niche_guided_subset_selection(
     pop: Population, vel: Array, target_n: int, weights: Array
 ) -> tuple[Population, Array, Array]:
-    """Algorithm 5: Niche-Guided Subset Selection (NGSS)。
+    """Algorithm 5: Niche-Guided Subset Selection (NGSS 生态位引导子集选择)。
 
-    1. 计算夹角并划分生态位 Niche
-    2. 按非支配可行集 -> 内部密度最稀疏剔除 -> 剩余全员聚类填充多层逻辑选择
+    严格对应论文 Algorithm 5 三层子集划分策略：
+    - First-Level (Lines 1-3): 计算各解与权重向量夹角，按 CDP 划分为非支配可行解集 Phi_nf 与剩余集 Phi_rem
+    - Second-Level (Lines 4-9): 遍历生态位，若超出容量 L = floor(N/K)，保留拥挤度最好的 L 个解，多余解加入 Phi_rem
+    - Third-Level (Lines 10-20): 遍历生态位，若低于容量 L：
+        * 若该生态位自身的剩余解池 Phi_j_rem > 需求量，按 CDP 挑选补充；
+        * 否则全部加入 Phi_j_rem，并从全局剩余池 Phi_rem 中挑选到第 j 个生态位向量夹角最小的解借调补充至 L。
+    - Line 21-23: 合并各生态位解集，评估 SPEA2 适应度 (epsilon=0，即 CDP)。
     """
-    k, capacity = len(weights), target_n // len(weights)
+    k = len(weights)
+    capacity = max(1, target_n // k)
     angle = calc_angles(pop.f, weights)
     niche = angle.argmin(axis=1)
 
+    # Line 2: 按 CDP 划分为非支配可行集 Phi_nf 与剩余候选集 Phi_rem
     nd = set(nondominated_feasible_indices(pop.f, pop.cv).tolist())
-    selected: list[int] = []
-    remainder: list[int] = [i for i in range(len(pop.x)) if i not in nd]
+    remainder = set(i for i in range(len(pop.x)) if i not in nd)
 
-    for j in range(k):
-        members = [i for i in nd if niche[i] == j]
+    # 计算 CDP 适应度 (ε=0 的 SPEA2 适应度，用于在 CDP 准则下排序)
+    cdp_fitness = spea2_fitness(pop.f, pop.cv, 0.0)
+
+    # Line 3-9: Second-Level Subset Division
+    niche_nf: list[list[int]] = [[] for _ in range(k)]
+    for i in range(k):
+        members = [idx for idx in nd if niche[idx] == i]
         if len(members) > capacity:
+            # 内部拥挤度距离：选择最小距离最大的 capacity 个个体 (最稀疏/最优拥挤度)
             d = np.linalg.norm(
                 pop.f[members, None] - pop.f[np.array(members)][None], axis=2
             )
@@ -263,22 +275,46 @@ def algorithm5_niche_guided_subset_selection(
             keep = np.asarray(members)[
                 np.argsort(d.min(axis=1))[::-1][:capacity]
             ].tolist()
-            remainder += [i for i in members if i not in keep]
+            unselected = [idx for idx in members if idx not in keep]
+            remainder.update(unselected)
             members = keep
-        selected += members
+        niche_nf[i] = members
 
+    # Line 10-20: Third-Level Subset Division
     for j in range(k):
-        need = capacity - sum(niche[i] == j for i in selected)
-        pool = [i for i in remainder if niche[i] == j and i not in selected]
-        if need > 0:
-            if len(pool) > need:
-                pool.sort(key=lambda i: (pop.cv[i] > 1e-12, pop.cv[i], angle[i, j]))
-            selected += pool[:need]
+        need = capacity - len(niche_nf[j])
+        if need <= 0:
+            continue
 
-    if len(selected) < target_n:
-        remaining = [i for i in range(len(pop.x)) if i not in selected]
-        remaining.sort(key=lambda i: (pop.cv[i] > 1e-12, pop.cv[i], angle[i].min()))
-        selected += remaining[: target_n - len(selected)]
+        # 当前生态位自有的剩余候选集 Phi_j^rem
+        phi_j_rem = [idx for idx in remainder if niche[idx] == j]
+
+        if len(phi_j_rem) > need:
+            # Line 14: 根据 CDP 选择 need 个解补充到 Phi_j^nf
+            phi_j_rem.sort(key=lambda idx: (pop.cv[idx] > 1e-12, cdp_fitness[idx], angle[idx, j]))
+            chosen = phi_j_rem[:need]
+            niche_nf[j].extend(chosen)
+            remainder.difference_update(chosen)
+        else:
+            # Line 16: 全部加入 Phi_j^rem
+            niche_nf[j].extend(phi_j_rem)
+            remainder.difference_update(phi_j_rem)
+            shortage = capacity - len(niche_nf[j])
+
+            # Line 17: 从全局剩余池 Phi^rem 中选择到第 j 个生态位夹角最小的解借调补充
+            if shortage > 0 and len(remainder) > 0:
+                rem_candidates = sorted(remainder, key=lambda idx: (angle[idx, j], cdp_fitness[idx]))
+                borrowed = rem_candidates[:shortage]
+                niche_nf[j].extend(borrowed)
+                remainder.difference_update(borrowed)
+
+    # Line 21: 合并所有生态位的解
+    selected = [idx for sublist in niche_nf for idx in sublist]
+
+    # 当 target_n 不能被 k 整除时的尾数微调补充 (例如 target_n=100, k=11, 11*9=99 差 1 个)
+    if len(selected) < target_n and len(remainder) > 0:
+        extra_candidates = sorted(remainder, key=lambda idx: (pop.cv[idx] > 1e-12, cdp_fitness[idx]))
+        selected.extend(extra_candidates[: target_n - len(selected)])
 
     idx = np.asarray(selected[:target_n], dtype=int)
     out_pop = take_pop(pop, idx)

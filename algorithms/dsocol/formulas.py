@@ -154,13 +154,8 @@ def update_cso_winner_s2(
 
     for k in w_indices:
         choices = w_indices[w_indices != k]
-        if len(choices) >= 2:
-            i, j = rng.choice(choices, size=2, replace=False)
-        elif len(choices) == 1:
-            i = j = choices[0]
-        else:
-            i = j = k
-        x_new[k] += (best_x - x_new[k]) / 2.0 + (x_w[i] - x_w[j]) / 2.0
+        i, j = rng.choice(choices, size=2, replace=False)
+        x_new[k] = x_new[k] + (best_x - x_new[k]) / 2.0 + (x_w[i] - x_w[j]) / 2.0
 
     return x_new
 

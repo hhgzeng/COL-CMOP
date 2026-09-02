@@ -59,7 +59,44 @@ class TestDSOCOL(unittest.TestCase):
         self.assertTrue(all(x <= y for x, y in zip(history_fe, history_fe[1:])))
         self.assertEqual(history_fe[-1], result.eval_count)
 
+    def test_algorithm5_ngss_borrowing_and_diversity(self):
+        """测试 NGSS (Algorithm 5) 能够正确实现跨生态位借调填充稀疏生态位。"""
+        from algorithms.dsocol.algorithms import algorithm5_niche_guided_subset_selection
+        from core.schema import Population
+
+        # 构造 2 目标场景，2 个参考权重向量
+        weights = np.array([[1.0, 0.0], [0.0, 1.0]])
+        target_n = 4  # capacity = 2
+
+        # 候选池：仅有 1 个解靠近权重 1，其余 5 个解都靠近权重 0
+        f = np.array([
+            [0.1, 0.9],   # 靠近权重 1 (生态位 1)
+            [0.9, 0.1],   # 靠近权重 0
+            [0.85, 0.15], # 靠近权重 0
+            [0.8, 0.2],   # 靠近权重 0
+            [0.75, 0.25], # 靠近权重 0
+            [0.7, 0.3],   # 靠近权重 0
+        ])
+        x = np.zeros((6, 2))
+        cv = np.zeros(6)
+        pop = Population(x=x, f=f, cv=cv)
+        vel = np.zeros_like(x)
+
+        selected_pop, selected_vel, fitness = algorithm5_niche_guided_subset_selection(
+            pop, vel, target_n=target_n, weights=weights
+        )
+
+        self.assertEqual(len(selected_pop.x), target_n)
+        self.assertEqual(len(selected_vel), target_n)
+        self.assertEqual(len(fitness), target_n)
+        # 验证解集无重复
+        self.assertEqual(len(np.unique(selected_pop.f, axis=0)), target_n)
+        # 生态位 1 缺少 1 个，必定借调离权重 1 最近的解（即 [0.7, 0.3]）
+        self.assertTrue(any(np.allclose(selected_pop.f[i], [0.1, 0.9]) for i in range(target_n)))
+        self.assertTrue(any(np.allclose(selected_pop.f[i], [0.7, 0.3]) for i in range(target_n)))
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
